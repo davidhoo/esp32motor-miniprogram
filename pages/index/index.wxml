@@ -127,6 +127,18 @@
         </button>
         <text class="control-unit">秒</text>
       </view>
+      
+      <!-- 应用设置按钮 -->
+      <view class="control-buttons">
+        <button
+          class="control-btn apply-btn"
+          bindtap="onApplySettings"
+          disabled="{{isApplying}}"
+          loading="{{isApplying}}"
+        >
+          {{isApplying ? '应用中...' : '应用设置'}}
+        </button>
+      </view>
     </view>
   </view>
 
