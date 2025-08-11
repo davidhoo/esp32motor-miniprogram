@@ -274,7 +274,10 @@ Page({
       // 连接成功后开始状态刷新
       this.startStatusRefresh()
       
-      // 同步设备参数功能已删除
+      // 首次连接成功后同步电机控制参数
+      setTimeout(() => {
+        this.syncMotorControlParams()
+      }, 500)
       
     } catch (error) {
       console.error('连接设备失败:', error)
@@ -467,6 +470,21 @@ Page({
     this.setData({
       statusTimer: timer
     })
+  },
+
+  // 同步电机控制参数
+  syncMotorControlParams() {
+    const { systemStatus } = this.data
+    if (systemStatus && systemStatus.runDuration && systemStatus.stopDuration) {
+      this.setData({
+        runDuration: systemStatus.runDuration,
+        stopDuration: systemStatus.stopDuration
+      })
+      console.log('已同步电机控制参数:', {
+        runDuration: systemStatus.runDuration,
+        stopDuration: systemStatus.stopDuration
+      })
+    }
   },
 
   // 停止状态刷新
