@@ -131,7 +131,7 @@ Page({
   // 扫描设备
   async scanDevices() {
     // 如果已经在扫描中，不重复启动
-    if (this.data.isScanning) {
+    if (this.data.isScanning && this.data.retryCount === 0) {
       return
     }
 
@@ -146,27 +146,34 @@ Page({
     try {
       const devices = await Ble.scanDevices()
       
-      this.setData({
-        devices,
-        showDeviceList: true,
-        isScanning: false,
-        buttonText: '扫描设备'
-      })
-
       if (devices.length === 0) {
-        // 没有找到设备，启动自动重试
+        // 没有找到设备，继续自动重试状态
+        this.setData({
+          devices: [],
+          showDeviceList: false,
+          isScanning: true,
+          buttonText: '扫描设备中...'
+        })
+        // 启动自动重试
         this.startAutoRetry()
       } else {
         // 找到设备，停止自动重试
         this.stopAutoRetry()
+        this.setData({
+          devices,
+          showDeviceList: true,
+          isScanning: false,
+          buttonText: '扫描设备'
+        })
       }
     } catch (error) {
       console.error('扫描设备失败:', error)
       
+      // 扫描失败，继续自动重试状态
       this.setData({
         errorMessage: '扫描设备失败，将自动重试...',
-        isScanning: false,
-        buttonText: '扫描设备'
+        isScanning: true,
+        buttonText: '扫描设备中...'
       })
       
       // 扫描失败，启动自动重试
@@ -179,15 +186,20 @@ Page({
     // 清除之前的重试定时器
     this.stopAutoRetry()
     
-    // 重置重试计数
-    this.setData({ retryCount: 0 })
+    // 重置重试计数，保持扫描状态
+    this.setData({
+      retryCount: 0,
+      isScanning: true,
+      buttonText: '扫描设备中...'
+    })
     
     const doRetry = () => {
       if (this.data.retryCount >= this.data.maxRetryCount) {
         // 达到最大重试次数
         this.setData({
           errorMessage: '2分钟内未找到设备，请检查设备是否开启',
-          buttonText: '扫描设备'
+          buttonText: '扫描设备',
+          isScanning: false
         })
         this.stopAutoRetry()
         return
@@ -195,7 +207,9 @@ Page({
 
       this.setData({
         retryCount: this.data.retryCount + 1,
-        errorMessage: `正在自动重试扫描...(${this.data.retryCount}/${this.data.maxRetryCount})`
+        errorMessage: `正在自动重试扫描...(${this.data.retryCount}/${this.data.maxRetryCount})`,
+        isScanning: true,
+        buttonText: '扫描设备中...'
       })
 
       console.log(`自动重试扫描第 ${this.data.retryCount} 次`)
@@ -504,49 +518,7 @@ Page({
     }
   },
 
-  // 恢复默认设置
-  async onResetSettings() {
-    if (!this.data.deviceId || this.data.connectionStatus !== 'connected') {
-      this.showErrorToast('请先连接设备')
-      return
-    }
-
-    const defaultSettings = {
-      runDuration: 30,
-      stopDuration: 60
-    }
-    
-    this.setData(defaultSettings)
-    
-    try {
-      await Ble.setRunDuration(this.data.deviceId, defaultSettings.runDuration)
-      await Ble.setStopDuration(this.data.deviceId, defaultSettings.stopDuration)
-      
-      this.showSuccessToast('已恢复默认设置')
-      
-      // 立即刷新状态
-      await this.refreshSystemStatus()
-      
-      // 恢复默认设置后同步设备参数到控制区
-      await this.syncInitialControlParameters()
-      
-    } catch (error) {
-      console.error('恢复默认设置失败:', error)
-      
-      let errorMessage = '恢复失败，请重试'
-      
-      // 根据错误类型提供更具体的错误信息
-      if (error.errCode === 10004) {
-        errorMessage = '设备通信失败，请检查连接'
-      } else if (error.errCode === 10006) {
-        errorMessage = '设备连接已断开'
-      } else if (error.errCode === 10012) {
-        errorMessage = '设备未响应，请重试'
-      }
-      
-      this.showErrorToast(errorMessage)
-    }
-  },
+  // 恢复默认设置功能已删除
 
   /* ========== 系统状态管理 ========== */
 
