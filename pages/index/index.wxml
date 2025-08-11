@@ -140,17 +140,7 @@
         </view>
       </view>
       
-      <!-- 控制按钮组 -->
-      <view class="control-buttons">
-        <button
-          class="control-btn apply-btn"
-          bindtap="onApplySettings"
-          disabled="{{connectionStatus !== 'connected' || isApplying}}"
-          loading="{{isApplying}}"
-        >
-          应用设置
-        </button>
-      </view>
+      <!-- 系统开关控制已删除 -->
     </view>
   </view>
 
