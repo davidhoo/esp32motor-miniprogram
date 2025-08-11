@@ -89,6 +89,33 @@ function bufferToString(buffer) {
   return result
 }
 
+/**
+ * 将数字转换为ArrayBuffer（小端格式）
+ * @param {number} value - 要转换的数字
+ * @param {number} bytes - 字节数（1, 2, 4）
+ * @returns {ArrayBuffer} - 转换后的ArrayBuffer
+ */
+function numberToBuffer(value, bytes = 4) {
+  const buffer = new ArrayBuffer(bytes)
+  const view = new DataView(buffer)
+  
+  switch (bytes) {
+    case 1:
+      view.setUint8(0, value)
+      break
+    case 2:
+      view.setUint16(0, value, true) // 小端格式
+      break
+    case 4:
+      view.setUint32(0, value, true) // 小端格式
+      break
+    default:
+      throw new Error('不支持的位数')
+  }
+  
+  return buffer
+}
+
 // BLE通信API封装
 
 /**
@@ -377,19 +404,58 @@ function readCharacteristic(deviceId, serviceId, characteristicId) {
 }
 
 /**
- * 获取系统状态
+ * 写入BLE特征值
  * @param {string} deviceId - 设备ID
- * @returns {Promise<Object>} - 系统状态对象
+ * @param {string} serviceId - 服务UUID
+ * @param {string} characteristicId - 特征值UUID
+ * @param {ArrayBuffer} buffer - 要写入的数据
+ * @returns {Promise} - 写入结果
  */
-async function getSystemStatus(deviceId) {
-  try {
-    console.log('开始获取系统状态:', deviceId)
+function writeCharacteristic(deviceId, serviceId, characteristicId, buffer) {
+  return new Promise((resolve, reject) => {
+    console.log('开始写入特征值:', {
+      deviceId,
+      serviceId,
+      characteristicId,
+      buffer: bufferToHex(buffer)
+    })
     
-    // 先获取设备服务
+    wx.writeBLECharacteristicValue({
+      deviceId,
+      serviceId,
+      characteristicId,
+      value: buffer,
+      success: (res) => {
+        console.log('写入特征值成功:', characteristicId)
+        resolve(res)
+      },
+      fail: (error) => {
+        console.error('写入特征值失败:', {
+          deviceId,
+          serviceId,
+          characteristicId,
+          errorCode: error.errCode,
+          errorMessage: error.errMsg
+        })
+        reject(error)
+      }
+    })
+  })
+}
+
+/**
+ * 获取目标服务和特征值
+ * @param {string} deviceId - 设备ID
+ * @param {string} targetCharacteristicUUID - 目标特征值UUID
+ * @returns {Promise<Object>} - 包含serviceId和characteristicId的对象
+ */
+async function getTargetServiceAndCharacteristic(deviceId, targetCharacteristicUUID) {
+  try {
+    // 获取服务列表
     const servicesRes = await getServices(deviceId)
     console.log('设备服务列表:', servicesRes.services.map(s => s.uuid))
     
-    // 查找匹配的服务
+    // 查找目标服务
     let targetService = null
     for (const service of servicesRes.services) {
       if (service.uuid.toLowerCase() === SERVICE_UUID.toLowerCase()) {
@@ -399,8 +465,6 @@ async function getSystemStatus(deviceId) {
     }
     
     if (!targetService) {
-      console.error('未找到目标服务:', SERVICE_UUID)
-      console.log('可用服务:', servicesRes.services.map(s => s.uuid))
       throw new Error('未找到目标服务')
     }
     
@@ -413,32 +477,142 @@ async function getSystemStatus(deviceId) {
       properties: c.properties
     })))
     
-    // 查找状态查询特征值
-    let statusCharacteristic = null
+    // 查找目标特征值
+    let targetCharacteristic = null
     for (const char of characteristicsRes.characteristics) {
-      if (char.uuid.toLowerCase() === CHARACTERISTIC_UUIDS.STATUS_QUERY.toLowerCase()) {
-        statusCharacteristic = char
+      if (char.uuid.toLowerCase() === targetCharacteristicUUID.toLowerCase()) {
+        targetCharacteristic = char
         break
       }
     }
     
-    if (!statusCharacteristic) {
-      console.error('未找到状态查询特征值:', CHARACTERISTIC_UUIDS.STATUS_QUERY)
-      console.log('可用特征值:', characteristicsRes.characteristics.map(c => c.uuid))
-      throw new Error('未找到状态查询特征值')
+    if (!targetCharacteristic) {
+      throw new Error('未找到目标特征值')
     }
     
-    console.log('找到状态查询特征值:', statusCharacteristic.uuid, '属性:', statusCharacteristic.properties)
+    console.log('找到目标特征值:', targetCharacteristic.uuid, '属性:', targetCharacteristic.properties)
+    
+    return {
+      serviceId: targetService.uuid,
+      characteristicId: targetCharacteristic.uuid
+    }
+    
+  } catch (error) {
+    console.error('获取目标服务和特征值失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 设置运行时长
+ * @param {string} deviceId - 设备ID
+ * @param {number} duration - 运行时长（秒）
+ * @returns {Promise} - 设置结果
+ */
+async function setRunDuration(deviceId, duration) {
+  try {
+    console.log('设置运行时长:', { deviceId, duration })
+    
+    // 获取目标服务和特征值
+    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
+      deviceId,
+      CHARACTERISTIC_UUIDS.RUN_DURATION
+    )
+    
+    // 将时长转换为4字节小端格式
+    const buffer = numberToBuffer(duration, 4)
+    
+    // 写入特征值
+    await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
+    
+    console.log('运行时长设置成功:', duration)
+    return true
+    
+  } catch (error) {
+    console.error('设置运行时长失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 设置停止间隔
+ * @param {string} deviceId - 设备ID
+ * @param {number} duration - 停止间隔（秒）
+ * @returns {Promise} - 设置结果
+ */
+async function setStopDuration(deviceId, duration) {
+  try {
+    console.log('设置停止间隔:', { deviceId, duration })
+    
+    // 获取目标服务和特征值
+    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
+      deviceId,
+      CHARACTERISTIC_UUIDS.STOP_INTERVAL
+    )
+    
+    // 将时长转换为4字节小端格式
+    const buffer = numberToBuffer(duration, 4)
+    
+    // 写入特征值
+    await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
+    
+    console.log('停止间隔设置成功:', duration)
+    return true
+    
+  } catch (error) {
+    console.error('设置停止间隔失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 设置系统控制状态
+ * @param {string} deviceId - 设备ID
+ * @param {number} control - 控制状态（0=停止，1=启动）
+ * @returns {Promise} - 设置结果
+ */
+async function setSystemControl(deviceId, control) {
+  try {
+    console.log('设置系统控制状态:', { deviceId, control })
+    
+    // 获取目标服务和特征值
+    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
+      deviceId,
+      CHARACTERISTIC_UUIDS.SYSTEM_CONTROL
+    )
+    
+    // 将控制状态转换为1字节
+    const buffer = numberToBuffer(control, 1)
+    
+    // 写入特征值
+    await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
+    
+    console.log('系统控制状态设置成功:', control)
+    return true
+    
+  } catch (error) {
+    console.error('设置系统控制状态失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 获取系统状态
+ * @param {string} deviceId - 设备ID
+ * @returns {Promise<Object>} - 系统状态对象
+ */
+async function getSystemStatus(deviceId) {
+  try {
+    console.log('开始获取系统状态:', deviceId)
+    
+    // 获取目标服务和特征值
+    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
+      deviceId,
+      CHARACTERISTIC_UUIDS.STATUS_QUERY
+    )
     
     // 读取状态查询特征值
-    const buffer = await readCharacteristic(
-      deviceId,
-      targetService.uuid,
-      statusCharacteristic.uuid
-    )
-    console.log('读取到的buffer:', buffer)
-    console.log('buffer类型:', typeof buffer)
-    console.log('buffer是否为null/undefined:', buffer == null)
+    const buffer = await readCharacteristic(deviceId, serviceId, characteristicId)
     
     // 检查buffer是否有效
     if (!buffer) {
@@ -458,25 +632,8 @@ async function getSystemStatus(deviceId) {
       }
     }
     
-    // 打印原始特征数据的详细信息
-    console.log('=== 原始特征数据详情 ===')
-    console.log('buffer长度:', buffer.byteLength)
-    console.log('buffer十六进制:', bufferToHex(buffer))
-    
-    // 打印每个字节的详细信息
-    const bytes = new Uint8Array(buffer)
-    console.log('字节数组:', Array.from(bytes))
-    console.log('字节数组(十六进制):', Array.from(bytes).map(b => '0x' + b.toString(16).padStart(2, '0')))
-    console.log('字节数组(ASCII):', Array.from(bytes).map(b => b >= 32 && b <= 126 ? String.fromCharCode(b) : '.').join(''))
-    
-    // 将ArrayBuffer转换为字符串（微信小程序兼容版本）
+    // 将ArrayBuffer转换为字符串
     const jsonString = bufferToString(buffer)
-    
-    console.log('=== 转换后的字符串 ===')
-    console.log('接收到状态JSON:', jsonString)
-    console.log('JSON字符串长度:', jsonString.length)
-    console.log('JSON字符串(转义):', JSON.stringify(jsonString))
-    console.log('原始buffer十六进制:', bufferToHex(buffer))
     
     // 检查是否为空数据
     if (!jsonString || jsonString.trim().length === 0) {
@@ -500,13 +657,8 @@ async function getSystemStatus(deviceId) {
     let statusData
     try {
       statusData = JSON.parse(jsonString.trim())
-      console.log('JSON解析成功:', statusData)
     } catch (parseError) {
       console.error('JSON解析失败:', parseError)
-      console.log('尝试解析的字符串:', JSON.stringify(jsonString))
-      
-      // 如果JSON解析失败，返回默认状态
-      console.warn('JSON解析失败，返回默认状态')
       return {
         state: 0,
         stateName: 'STOPPED',
@@ -521,7 +673,8 @@ async function getSystemStatus(deviceId) {
         freeHeap: 0
       }
     }
-    // 直接使用实际返回的字段结构，无需转换
+    
+    // 直接使用实际返回的字段结构
     const systemStatus = {
       state: statusData.state || 0,
       stateName: statusData.stateName || 'STOPPED',
@@ -536,40 +689,11 @@ async function getSystemStatus(deviceId) {
       freeHeap: statusData.freeHeap || 0
     }
     
-    console.log('=== 字段映射详情 ===')
-    console.log('原始数据字段:')
-    console.log('  state:', statusData.state)
-    console.log('  stateName:', statusData.stateName)
-    console.log('  remainingRunTime:', statusData.remainingRunTime)
-    console.log('  remainingStopTime:', statusData.remainingStopTime)
-    console.log('  currentCycleCount:', statusData.currentCycleCount)
-    console.log('  runDuration:', statusData.runDuration)
-    console.log('  stopDuration:', statusData.stopDuration)
-    console.log('  cycleCount:', statusData.cycleCount)
-    console.log('  autoStart:', statusData.autoStart)
-    console.log('  uptime:', statusData.uptime)
-    console.log('  freeHeap:', statusData.freeHeap)
-    console.log('映射后数据字段:')
-    console.log('  state:', systemStatus.state)
-    console.log('  stateName:', systemStatus.stateName)
-    console.log('  remainingRunTime:', systemStatus.remainingRunTime)
-    console.log('  remainingStopTime:', systemStatus.remainingStopTime)
-    console.log('  currentCycleCount:', systemStatus.currentCycleCount)
-    console.log('  runDuration:', systemStatus.runDuration)
-    console.log('  stopDuration:', systemStatus.stopDuration)
-    console.log('  cycleCount:', systemStatus.cycleCount)
-    console.log('  autoStart:', systemStatus.autoStart)
-    console.log('  uptime:', systemStatus.uptime)
-    console.log('  freeHeap:', systemStatus.freeHeap)
-    console.log('  uptime:', systemStatus.uptime)
-    
-    console.log('解析后的系统状态:', systemStatus)
+    console.log('获取系统状态成功:', systemStatus)
     return systemStatus
     
   } catch (error) {
     console.error('获取系统状态失败:', error)
-    
-    // 对于其他类型的错误（如BLE通信错误），抛出异常
     throw error
   }
 }
@@ -584,6 +708,7 @@ export default {
   // 工具函数
   bufferToHex,
   bufferToString,
+  numberToBuffer,
 
   // BLE基础操作
   scanDevices,
@@ -593,10 +718,16 @@ export default {
   getCharacteristics,
   verifyConnection,
   readCharacteristic,
+  writeCharacteristic,
 
   // 增强的连接函数
   connectDeviceWithRetry,
   
   // 状态查询功能
-  getSystemStatus
+  getSystemStatus,
+  
+  // 控制功能
+  setRunDuration,
+  setStopDuration,
+  setSystemControl
 }

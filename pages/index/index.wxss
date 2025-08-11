@@ -23,7 +23,9 @@
 }
 
 /* 卡片样式 */
-.connection-card {
+.connection-card,
+.control-card,
+.status-card {
   background: white;
   border-radius: 16rpx;
   padding: 30rpx;
@@ -44,7 +46,9 @@
     margin-bottom: 40rpx;
   }
   
-  .connection-card {
+  .connection-card,
+  .control-card,
+  .status-card {
     padding: 40rpx;
   }
 }
@@ -62,7 +66,9 @@
     padding: 15rpx;
   }
   
-  .connection-card {
+  .connection-card,
+  .control-card,
+  .status-card {
     padding: 20rpx;
   }
   
@@ -224,60 +230,128 @@ button[disabled] {
   opacity: 0.6;
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: #1a1a1a;
-  }
-  
-  .connection-card {
-    background-color: #2a2a2a;
-    color: #fff;
-  }
-  
-  .section-title {
-    color: #fff;
-  }
-  
-  .device-item {
-    background-color: #333;
-    border-color: #555;
-  }
-  
-  .device-info .device-name {
-    color: #fff;
-  }
-  
-  .device-info .device-id,
-  .device-info .device-rssi {
-    color: #ccc;
-  }
-  
-  .success-message {
-    background-color: #162312;
-    border-color: #274916;
-    color: #73d13d;
-  }
-  
-  .error-message {
-    background-color: #2a1216;
-    border-color: #5c2526;
-    color: #ff7875;
-  }
-}
-
-/* 系统状态区样式 */
-.status-section {
+/* 电机控制区样式 */
+.control-section {
   margin-top: 20rpx;
 }
 
-.status-card {
+.control-card {
   background: white;
   border-radius: 16rpx;
   padding: 30rpx;
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
   width: 100%;
   box-sizing: border-box;
+}
+
+.control-item {
+  margin-bottom: 40rpx;
+}
+
+.control-item:last-child {
+  margin-bottom: 30rpx;
+}
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.control-label text {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.control-label .control-value {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: bold;
+}
+
+.control-label .control-status {
+  font-size: 28rpx;
+  color: #fa541c;
+  font-weight: bold;
+}
+
+.control-content {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.control-slider {
+  flex: 1;
+  margin: 0;
+}
+
+.control-input {
+  width: 120rpx;
+  height: 60rpx;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.switch-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.system-switch {
+  transform: scale(1.2);
+}
+
+/* 控制按钮组 */
+.control-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.control-btn {
+  flex: 1;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 8rpx;
+  border: none;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.apply-btn {
+  background-color: #07c160;
+  color: white;
+}
+
+.apply-btn:active {
+  background-color: #059a4c;
+}
+
+.reset-btn {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1rpx solid #ddd;
+}
+
+.reset-btn:active {
+  background-color: #e0e0e0;
+}
+
+.control-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 系统状态区样式 */
+.status-section {
+  margin-top: 20rpx;
 }
 
 .status-row {
@@ -318,6 +392,7 @@ button[disabled] {
   font-size: 26rpx;
   line-height: 1.2;
 }
+
 /* 电机状态特殊样式 - 基于状态码 */
 .motor-state.state-0 {
   color: #fa541c; /* 已停止 - 红色 */
@@ -352,8 +427,34 @@ button[disabled] {
 
 /* 响应式适配 */
 @media (min-width: 768rpx) {
+  .control-card,
   .status-card {
     padding: 40rpx;
+  }
+  
+  .control-item {
+    margin-bottom: 50rpx;
+  }
+  
+  .control-label text,
+  .control-label .control-value,
+  .control-label .control-status {
+    font-size: 30rpx;
+  }
+  
+  .control-input {
+    width: 140rpx;
+    height: 70rpx;
+    font-size: 30rpx;
+  }
+  
+  .control-buttons {
+    margin-top: 50rpx;
+  }
+  
+  .control-btn {
+    font-size: 30rpx;
+    padding: 25rpx 0;
   }
   
   .status-row {
@@ -372,8 +473,30 @@ button[disabled] {
 }
 
 @media (max-width: 480rpx) {
+  .control-card,
   .status-card {
     padding: 20rpx;
+  }
+  
+  .control-item {
+    margin-bottom: 30rpx;
+  }
+  
+  .control-label text,
+  .control-label .control-value,
+  .control-label .control-status {
+    font-size: 24rpx;
+  }
+  
+  .control-input {
+    width: 100rpx;
+    height: 50rpx;
+    font-size: 24rpx;
+  }
+  
+  .control-buttons {
+    flex-direction: column;
+    gap: 15rpx;
   }
   
   .status-row {
@@ -397,18 +520,67 @@ button[disabled] {
 
 /* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
+  .container {
+    background-color: #1a1a1a;
+  }
+  
+  .connection-card,
+  .control-card,
   .status-card {
     background-color: #2a2a2a;
     color: #fff;
   }
   
-  .status-label {
+  .section-title {
+    color: #fff;
+  }
+  
+  .control-label text {
+    color: #fff;
+  }
+  
+  .control-input {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  
+  .device-item {
+    background-color: #333;
+    border-color: #555;
+  }
+  
+  .device-info .device-name {
+    color: #fff;
+  }
+  
+  .device-info .device-id,
+  .device-info .device-rssi {
     color: #ccc;
   }
   
-  .status-value {
-    color: #fff;
+  .success-message {
+    background-color: #162312;
+    border-color: #274916;
+    color: #73d13d;
   }
+  
+  .error-message {
+    background-color: #2a1216;
+    border-color: #5c2526;
+    color: #ff7875;
+  }
+  
+  .reset-btn {
+    background-color: #333;
+    color: #ccc;
+    border-color: #555;
+  }
+  
+  .reset-btn:active {
+    background-color: #444;
+  }
+  
   /* 深色模式下的状态样式 */
   .motor-state.state-0 {
     color: #ff7875; /* 已停止 - 红色 */
@@ -441,6 +613,7 @@ button[disabled] {
 }
 
 /* 状态区域动画效果 */
+.control-section,
 .status-section {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -457,10 +630,32 @@ button[disabled] {
 }
 
 /* 状态值更新动画 */
-.status-value {
+.status-value,
+.control-value,
+.control-status {
   transition: all 0.3s ease;
 }
 
-.status-value:hover {
+.status-value:hover,
+.control-value:hover,
+.control-status:hover {
   transform: scale(1.05);
+}
+
+/* 滑块动画效果 */
+.control-slider {
+  transition: all 0.3s ease;
+}
+
+.control-slider:active {
+  transform: scale(1.02);
+}
+
+/* 开关动画效果 */
+.system-switch {
+  transition: all 0.3s ease;
+}
+
+.system-switch:active {
+  transform: scale(1.1);
 }
