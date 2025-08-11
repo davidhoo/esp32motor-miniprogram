@@ -1,0 +1,125 @@
+<view class="container">
+  <!-- 蓝牙连接管理区 -->
+  <view class="section connection-section">
+    <view class="section-header">
+      <text class="section-title">📡 蓝牙设备连接</text>
+    </view>
+    
+    <view class="connection-card">
+      <view class="connection-row" wx:if="{{deviceName}}">
+        <text class="label">已连接设备:</text>
+        <text class="device-name">{{deviceName}}</text>
+      </view>
+      
+      <view class="button-group">
+        <button
+          class="connect-btn {{connectionStatus}}"
+          bindtap="onConnect"
+          disabled="{{isConnecting || isScanning}}"
+          loading="{{isConnecting || isScanning}}"
+        >
+          {{buttonText}}
+        </button>
+      </view>
+      
+      <!-- 设备列表 -->
+      <view class="device-list" wx:if="{{showDeviceList && devices.length > 0}}">
+        <view class="device-list-header">
+          <text>找到以下ESP32-Motor设备，点击连接:</text>
+        </view>
+        <view
+          class="device-item {{deviceId === item.deviceId ? 'active' : ''}}"
+          wx:for="{{devices}}"
+          wx:key="deviceId"
+          bindtap="onSelectDevice"
+          data-device-id="{{item.deviceId}}"
+          data-device-name="{{item.name || item.localName}}"
+        >
+          <view class="device-info">
+            <text class="device-name">{{item.name || item.localName}}</text>
+            <text class="device-id">设备ID: {{item.deviceId}}</text>
+            <text class="device-rssi">信号强度: {{item.RSSI}}dBm</text>
+          </view>
+          <view class="device-connect-icon">
+            {{deviceId === item.deviceId ? '✓' : '→'}}
+          </view>
+        </view>
+      </view>
+      
+      <!-- 连接成功提示 -->
+      <view class="success-message" wx:if="{{connectionStatus === 'connected'}}">
+        <text>✅ 设备连接成功！蓝牙通信已建立。</text>
+      </view>
+      
+      <!-- 错误提示 -->
+      <view class="error-message" wx:if="{{errorMessage}}">
+        <text>{{errorMessage}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 系统状态展示区 -->
+  <view class="section status-section" wx:if="{{connectionStatus === 'connected'}}">
+    <view class="section-header">
+      <text class="section-title">📊 系统状态</text>
+    </view>
+    
+    <view class="status-card">
+      <view class="status-row">
+        <text class="status-label">电机状态:</text>
+        <text class="status-value motor-state state-{{systemStatus.state}}">
+          <text wx:if="{{systemStatus.state === 0}}">已停止🔴</text>
+          <text wx:elif="{{systemStatus.state === 1}}">运行中🟢</text>
+          <text wx:elif="{{systemStatus.state === 2}}">已暂停🟡</text>
+          <text wx:elif="{{systemStatus.state === 3}}">启动中🔵</text>
+          <text wx:else>{{systemStatus.stateName}}{{systemStatus.state}}</text>
+        </text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">运行时长:</text>
+        <text class="status-value">{{systemStatus.runDuration}}秒</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">停止间隔:</text>
+        <text class="status-value">{{systemStatus.stopDuration}}秒</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">运行倒计时:</text>
+        <text class="status-value countdown">{{systemStatus.remainingRunTime}}秒</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">停止倒计时:</text>
+        <text class="status-value countdown">{{systemStatus.remainingStopTime}}秒</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">当前循环:</text>
+        <text class="status-value">{{systemStatus.currentCycleCount}}次</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">总循环设置:</text>
+        <text class="status-value">{{systemStatus.cycleCount === 0 ? '无限循环' : systemStatus.cycleCount + '次'}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">自动启动:</text>
+        <text class="status-value">{{systemStatus.autoStart ? '开启 ✅' : '关闭 ❌'}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">运行时间:</text>
+        <text class="status-value">{{systemStatus.formattedUptime}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">空闲内存:</text>
+        <text class="status-value">{{systemStatus.formattedFreeHeap}}</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,466 @@
+/* 全局样式 */
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.section {
+  margin-bottom: 30rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.section-header {
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 卡片样式 */
+.connection-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 响应式布局 */
+@media (min-width: 768rpx) {
+  .container {
+    padding: 30rpx;
+    max-width: 800rpx;
+    margin: 0 auto;
+  }
+  
+  .section {
+    margin-bottom: 40rpx;
+  }
+  
+  .connection-card {
+    padding: 40rpx;
+  }
+}
+
+@media (min-width: 1024rpx) {
+  .container {
+    padding: 40rpx;
+    max-width: 800rpx;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480rpx) {
+  .container {
+    padding: 15rpx;
+  }
+  
+  .connection-card {
+    padding: 20rpx;
+  }
+  
+  .section-title {
+    font-size: 30rpx;
+  }
+}
+
+/* 连接管理区样式 */
+.connection-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.connection-row .label {
+  width: 160rpx;
+  font-size: 28rpx;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.connection-row .status {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+.connection-row .status.disconnected {
+  color: #fa5151;
+}
+
+.connection-row .status.connecting {
+  color: #ff8f1f;
+}
+
+.connection-row .status.connected {
+  color: #07c160;
+}
+
+.connection-row .status.failed {
+  color: #fa5151;
+}
+
+.connection-row .device-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.button-group {
+  margin-top: 30rpx;
+}
+
+.connect-btn {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 8rpx;
+  background-color: #07c160;
+  color: white;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connect-btn.connected {
+  background-color: #fa5151;
+}
+
+/* 设备列表样式 */
+.device-list {
+  margin-top: 20rpx;
+  border-top: 1rpx solid #eee;
+  padding-top: 20rpx;
+}
+
+.device-list-header {
+  margin-bottom: 15rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.device-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border: 1rpx solid #eee;
+  border-radius: 8rpx;
+  margin-bottom: 10rpx;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.device-item:hover {
+  background-color: #f0f0f0;
+}
+
+.device-item.active {
+  border-color: #07c160;
+  background-color: #e6f7ff;
+}
+
+.device-info {
+  flex: 1;
+}
+
+.device-info .device-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5rpx;
+}
+
+.device-info .device-id,
+.device-info .device-rssi {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 2rpx;
+}
+
+.device-connect-icon {
+  font-size: 32rpx;
+  color: #07c160;
+  font-weight: bold;
+}
+
+/* 成功提示样式 */
+.success-message {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #f6ffed;
+  border: 1rpx solid #b7eb8f;
+  border-radius: 8rpx;
+  color: #52c41a;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* 错误提示样式 */
+.error-message {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #fff2e8;
+  border: 1rpx solid #ffbb96;
+  border-radius: 8rpx;
+  color: #fa541c;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* 禁用状态样式 */
+button[disabled] {
+  opacity: 0.6;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: #1a1a1a;
+  }
+  
+  .connection-card {
+    background-color: #2a2a2a;
+    color: #fff;
+  }
+  
+  .section-title {
+    color: #fff;
+  }
+  
+  .device-item {
+    background-color: #333;
+    border-color: #555;
+  }
+  
+  .device-info .device-name {
+    color: #fff;
+  }
+  
+  .device-info .device-id,
+  .device-info .device-rssi {
+    color: #ccc;
+  }
+  
+  .success-message {
+    background-color: #162312;
+    border-color: #274916;
+    color: #73d13d;
+  }
+  
+  .error-message {
+    background-color: #2a1216;
+    border-color: #5c2526;
+    color: #ff7875;
+  }
+}
+
+/* 系统状态区样式 */
+.status-section {
+  margin-top: 20rpx;
+}
+
+.status-card {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 10rpx 0;
+}
+
+.status-row:last-child {
+  margin-bottom: 0;
+}
+
+.status-label {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: 500;
+  flex-shrink: 0;
+  width: 180rpx;
+  white-space: nowrap;
+}
+
+.status-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+  text-align: right;
+  flex: 1;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 电机状态特殊处理 */
+.status-value.motor-state {
+  font-size: 26rpx;
+  line-height: 1.2;
+}
+/* 电机状态特殊样式 - 基于状态码 */
+.motor-state.state-0 {
+  color: #fa541c; /* 已停止 - 红色 */
+}
+
+.motor-state.state-1 {
+  color: #52c41a; /* 运行中 - 绿色 */
+}
+
+.motor-state.state-2 {
+  color: #faad14; /* 已暂停 - 黄色 */
+}
+
+.motor-state.state-3 {
+  color: #1890ff; /* 启动中 - 蓝色 */
+}
+
+/* 兼容旧版本样式 */
+.motor-state.running {
+  color: #52c41a;
+}
+
+.motor-state.stopped {
+  color: #fa541c;
+}
+
+/* 倒计时特殊样式 */
+.countdown {
+  color: #1890ff;
+  font-family: 'Courier New', monospace;
+}
+
+/* 响应式适配 */
+@media (min-width: 768rpx) {
+  .status-card {
+    padding: 40rpx;
+  }
+  
+  .status-row {
+    margin-bottom: 25rpx;
+    padding: 15rpx 0;
+  }
+  
+  .status-label {
+    font-size: 30rpx;
+    width: 200rpx;
+  }
+  
+  .status-value {
+    font-size: 30rpx;
+  }
+}
+
+@media (max-width: 480rpx) {
+  .status-card {
+    padding: 20rpx;
+  }
+  
+  .status-row {
+    margin-bottom: 15rpx;
+    padding: 8rpx 0;
+  }
+  
+  .status-label {
+    font-size: 24rpx;
+    width: 160rpx;
+  }
+  
+  .status-value {
+    font-size: 24rpx;
+  }
+  
+  .status-value.motor-state {
+    font-size: 22rpx;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .status-card {
+    background-color: #2a2a2a;
+    color: #fff;
+  }
+  
+  .status-label {
+    color: #ccc;
+  }
+  
+  .status-value {
+    color: #fff;
+  }
+  /* 深色模式下的状态样式 */
+  .motor-state.state-0 {
+    color: #ff7875; /* 已停止 - 红色 */
+  }
+
+  .motor-state.state-1 {
+    color: #73d13d; /* 运行中 - 绿色 */
+  }
+
+  .motor-state.state-2 {
+    color: #ffd666; /* 已暂停 - 黄色 */
+  }
+
+  .motor-state.state-3 {
+    color: #40a9ff; /* 启动中 - 蓝色 */
+  }
+  
+  /* 兼容旧版本样式 */
+  .motor-state.running {
+    color: #73d13d;
+  }
+  
+  .motor-state.stopped {
+    color: #ff7875;
+  }
+  
+  .countdown {
+    color: #40a9ff;
+  }
+}
+
+/* 状态区域动画效果 */
+.status-section {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 状态值更新动画 */
+.status-value {
+  transition: all 0.3s ease;
+}
+
+.status-value:hover {
+  transform: scale(1.05);
+}

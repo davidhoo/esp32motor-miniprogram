@@ -1,0 +1,31 @@
+<view class="box">
+  <view class="button-group">
+    <button type="primary" bindtap="handleConnect" disabled="{{connected}}">
+      {{connected ? '已连接' : '连接设备'}}
+    </button>
+    <button type="warn" bindtap="handleDisconnect" disabled="{{!connected}}">
+      断开连接
+    </button>
+    <button type="default" bindtap="handleClear">清空日志</button>
+  </view>
+  
+  <view class="button-group" wx:if="{{connected}}">
+    <button type="default" bindtap="handleTestStatus" size="mini">
+      测试状态读取
+    </button>
+    <button type="default" bindtap="handleTestNotify" size="mini">
+      测试通知订阅
+    </button>
+  </view>
+  
+  <view class="status">
+    <text class="status-text">
+      状态: {{connected ? '🟢 已连接' : '🔴 未连接'}}
+      {{deviceId ? ' (' + deviceId + ')' : ''}}
+    </text>
+  </view>
+  
+  <scroll-view scroll-y class="log">
+    <text class="log-text">{{log || '点击"连接设备"开始测试BLE连接流程...\n\n🔧 新增功能:\n- 增强的错误处理和重试机制\n- 连接状态验证\n- 自动重连功能\n- 更稳定的状态读取'}}</text>
+  </scroll-view>
+</view>
