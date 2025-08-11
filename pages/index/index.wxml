@@ -150,13 +150,6 @@
         >
           应用设置
         </button>
-        <button
-          class="control-btn reset-btn"
-          bindtap="onResetSettings"
-          disabled="{{!connectionStatus === 'connected'}}"
-        >
-          恢复默认
-        </button>
       </view>
     </view>
   </view>
