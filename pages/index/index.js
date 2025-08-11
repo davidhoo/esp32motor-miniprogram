@@ -445,7 +445,60 @@ Page({
     })
   },
 
-  // 应用设置功能已删除
+  // 应用设置到BLE设备
+  async onApplySettings() {
+    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
+      this.showErrorToast('请先连接设备')
+      return
+    }
+
+    // 验证输入值
+    const runValidation = this.validateRunDuration(this.data.runDuration)
+    const stopValidation = this.validateStopDuration(this.data.stopDuration)
+
+    if (!runValidation.valid) {
+      this.showErrorToast(runValidation.message)
+      return
+    }
+
+    if (!stopValidation.valid) {
+      this.showErrorToast(stopValidation.message)
+      return
+    }
+
+    this.setData({ isApplying: true })
+
+    try {
+      // 设置运行时长
+      await Ble.setRunDuration(this.data.deviceId, this.data.runDuration)
+      
+      // 设置停止间隔
+      await Ble.setStopDuration(this.data.deviceId, this.data.stopDuration)
+      
+      this.showSuccessToast('设置已应用')
+      
+      // 应用成功后刷新系统状态
+      setTimeout(() => {
+        this.refreshSystemStatus()
+      }, 500)
+      
+    } catch (error) {
+      console.error('应用设置失败:', error)
+      let errorMessage = '设置失败，请重试'
+      
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      this.showErrorToast(errorMessage)
+    } finally {
+      this.setData({ isApplying: false })
+    }
+  },
 
   /* ========== 系统状态管理 ========== */
   // 系统开关控制功能已删除

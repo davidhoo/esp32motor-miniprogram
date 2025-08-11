@@ -594,13 +594,13 @@ button[disabled] {
   .control-label text,
   .control-label .control-value,
   .control-label .control-status {
-    font-size: 24rpx;
+    font-size: 28rpx;
   }
   
   .control-input {
     width: 100rpx;
     height: 50rpx;
-    font-size: 24rpx;
+    font-size: 28rpx;
   }
   
   /* 小屏幕下的新输入组样式 */
@@ -803,7 +803,7 @@ button[disabled] {
 }
 
 .control-label-line {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #333;
   font-weight: 500;
   white-space: nowrap;
@@ -848,6 +848,7 @@ button[disabled] {
   border-color: #ff4757;
    margin: 0;
     padding: 0;
+    font-size: 38rpx;
 }
 
 .control-btn-inline.decrease-btn:active {
@@ -862,12 +863,12 @@ button[disabled] {
 }
 
 .control-input-inline {
-  width: 60rpx;
+  width: 80rpx;
   height: 42rpx;
   border: 1rpx solid #e0e0e0;
   border-radius: 6rpx;
   text-align: center;
-  font-size: 22rpx;
+  font-size: 26rpx;
   background-color: #fff;
   color: #333;
   font-weight: bold;
@@ -875,7 +876,7 @@ button[disabled] {
 }
 
 .control-unit {
-  font-size: 22rpx;
+  font-size: 28rpx;
   color: #666;
   font-weight: 500;
   white-space: nowrap;
