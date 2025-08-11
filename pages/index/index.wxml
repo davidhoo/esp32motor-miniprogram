@@ -72,26 +72,31 @@
           <text class="control-value">{{runDuration}}秒</text>
         </view>
         <view class="control-content">
-          <slider
-            class="control-slider"
-            min="1"
-            max="999"
-            value="{{runDuration}}"
-            bindchange="onRunDurationChange"
-            bindchanging="onRunDurationChanging"
-            activeColor="#07c160"
-            backgroundColor="#e0e0e0"
-            block-size="20"
-          />
-          <input
-            class="control-input"
-            type="number"
-            value="{{runDuration}}"
-            min="1"
-            max="999"
-            bindinput="onRunDurationInput"
-            bindblur="onRunDurationBlur"
-          />
+          <view class="input-group">
+            <button
+              class="control-btn-small decrease-btn"
+              bindtap="onRunDurationDecrease"
+              disabled="{{runDuration <= 1}}"
+            >
+              -
+            </button>
+            <input
+              class="control-input-new"
+              type="number"
+              value="{{runDuration}}"
+              min="1"
+              max="999"
+              bindinput="onRunDurationInput"
+              bindblur="onRunDurationBlur"
+            />
+            <button
+              class="control-btn-small increase-btn"
+              bindtap="onRunDurationIncrease"
+              disabled="{{runDuration >= 999}}"
+            >
+              +
+            </button>
+          </view>
         </view>
       </view>
       
@@ -102,42 +107,31 @@
           <text class="control-value">{{stopDuration}}秒</text>
         </view>
         <view class="control-content">
-          <slider
-            class="control-slider"
-            min="0"
-            max="999"
-            value="{{stopDuration}}"
-            bindchange="onStopDurationChange"
-            bindchanging="onStopDurationChanging"
-            activeColor="#07c160"
-            backgroundColor="#e0e0e0"
-            block-size="20"
-          />
-          <input
-            class="control-input"
-            type="number"
-            value="{{stopDuration}}"
-            min="0"
-            max="999"
-            bindinput="onStopDurationInput"
-            bindblur="onStopDurationBlur"
-          />
-        </view>
-      </view>
-      
-      <!-- 系统开关控制 -->
-      <view class="control-item">
-        <view class="control-label">
-          <text>系统开关</text>
-          <text class="control-status">{{systemControl ? '开启' : '关闭'}}</text>
-        </view>
-        <view class="switch-container">
-          <switch
-            class="system-switch"
-            checked="{{systemControl}}"
-            bindchange="onSystemSwitchChange"
-            color="#07c160"
-          />
+          <view class="input-group">
+            <button
+              class="control-btn-small decrease-btn"
+              bindtap="onStopDurationDecrease"
+              disabled="{{stopDuration <= 0}}"
+            >
+              -
+            </button>
+            <input
+              class="control-input-new"
+              type="number"
+              value="{{stopDuration}}"
+              min="0"
+              max="999"
+              bindinput="onStopDurationInput"
+              bindblur="onStopDurationBlur"
+            />
+            <button
+              class="control-btn-small increase-btn"
+              bindtap="onStopDurationIncrease"
+              disabled="{{stopDuration >= 999}}"
+            >
+              +
+            </button>
+          </view>
         </view>
       </view>
       
@@ -146,7 +140,7 @@
         <button
           class="control-btn apply-btn"
           bindtap="onApplySettings"
-          disabled="{{!connectionStatus === 'connected' || isApplying}}"
+          disabled="{{connectionStatus !== 'connected' || isApplying}}"
           loading="{{isApplying}}"
         >
           应用设置

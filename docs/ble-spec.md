@@ -1,8 +1,8 @@
 # ESP32-Motor BLE通信协议规范
 
 ## 1. 设备信息
-- **设备名称**: `ESP32-Motor`
-- **广播名称**: `ESP32-Motor`
+- **设备名称**: `ESP32-Motor-Control`
+- **广播名称**: `ESP32-Motor-Control`
 - **连接方式**: BLE 4.2+
 
 ## 2. BLE服务与特征值

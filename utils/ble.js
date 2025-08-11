@@ -8,7 +8,6 @@ const SERVICE_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
 const CHARACTERISTIC_UUIDS = {
   RUN_DURATION: '2f7a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c6',    // 运行时长
   STOP_INTERVAL: '3f8a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c7',   // 停止间隔
-  SYSTEM_CONTROL: '4f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c8',  // 系统控制
   STATUS_QUERY: '5f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c9'     // 状态查询
 }
 
@@ -96,6 +95,7 @@ function bufferToString(buffer) {
  * @returns {ArrayBuffer} - 转换后的ArrayBuffer
  */
 function numberToBuffer(value, bytes = 4) {
+  // 使用DataView确保小端格式，这样更可靠
   const buffer = new ArrayBuffer(bytes)
   const view = new DataView(buffer)
   
@@ -104,16 +104,46 @@ function numberToBuffer(value, bytes = 4) {
       view.setUint8(0, value)
       break
     case 2:
-      view.setUint16(0, value, true) // 小端格式
+      view.setUint16(0, value, true) // true = 小端格式
       break
     case 4:
-      view.setUint32(0, value, true) // 小端格式
+      view.setUint32(0, value, true) // true = 小端格式
       break
     default:
       throw new Error('不支持的位数')
   }
   
   return buffer
+}
+
+/**
+ * 测试数据转换函数
+ * @param {number} value - 测试值
+ * @returns {Object} - 转换结果对比
+ */
+function testNumberConversion(value) {
+  // 使用新方法（Uint32Array）
+  const newMethod = new Uint32Array([value])
+  
+  // 使用旧方法（DataView）
+  const oldBuffer = new ArrayBuffer(4)
+  const oldView = new DataView(oldBuffer)
+  oldView.setUint32(0, value, true) // 小端格式
+  
+  return {
+    value: value,
+    newMethod: {
+      buffer: newMethod.buffer,
+      hex: bufferToHex(newMethod.buffer),
+      bytes: Array.from(new Uint8Array(newMethod.buffer))
+    },
+    oldMethod: {
+      buffer: oldBuffer,
+      hex: bufferToHex(oldBuffer),
+      bytes: Array.from(new Uint8Array(oldBuffer))
+    },
+    isEqual: bufferToHex(newMethod.buffer) === bufferToHex(oldBuffer)
+  }
 }
 
 // BLE通信API封装
@@ -521,6 +551,11 @@ async function setRunDuration(deviceId, duration) {
     
     // 将时长转换为4字节小端格式
     const buffer = numberToBuffer(duration, 4)
+    console.log('运行时长数据转换:', {
+      原始值: duration,
+      转换后的十六进制: bufferToHex(buffer),
+      字节长度: buffer.byteLength
+    })
     
     // 写入特征值
     await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
@@ -544,14 +579,30 @@ async function setStopDuration(deviceId, duration) {
   try {
     console.log('设置停止间隔:', { deviceId, duration })
     
+    // 测试数据转换
+    const conversionTest = testNumberConversion(duration)
+    console.log('停止间隔数据转换测试:', conversionTest)
+    
     // 获取目标服务和特征值
     const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
       deviceId,
       CHARACTERISTIC_UUIDS.STOP_INTERVAL
     )
     
+    console.log('停止间隔特征值信息:', {
+      serviceId,
+      characteristicId,
+      targetUUID: CHARACTERISTIC_UUIDS.STOP_INTERVAL
+    })
+    
     // 将时长转换为4字节小端格式
     const buffer = numberToBuffer(duration, 4)
+    console.log('停止间隔数据转换:', {
+      原始值: duration,
+      转换后的十六进制: bufferToHex(buffer),
+      字节长度: buffer.byteLength,
+      字节数组: Array.from(new Uint8Array(buffer))
+    })
     
     // 写入特征值
     await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
@@ -565,36 +616,6 @@ async function setStopDuration(deviceId, duration) {
   }
 }
 
-/**
- * 设置系统控制状态
- * @param {string} deviceId - 设备ID
- * @param {number} control - 控制状态（0=停止，1=启动）
- * @returns {Promise} - 设置结果
- */
-async function setSystemControl(deviceId, control) {
-  try {
-    console.log('设置系统控制状态:', { deviceId, control })
-    
-    // 获取目标服务和特征值
-    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
-      deviceId,
-      CHARACTERISTIC_UUIDS.SYSTEM_CONTROL
-    )
-    
-    // 将控制状态转换为1字节
-    const buffer = numberToBuffer(control, 1)
-    
-    // 写入特征值
-    await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
-    
-    console.log('系统控制状态设置成功:', control)
-    return true
-    
-  } catch (error) {
-    console.error('设置系统控制状态失败:', error)
-    throw error
-  }
-}
 
 /**
  * 获取系统状态
@@ -709,6 +730,7 @@ export default {
   bufferToHex,
   bufferToString,
   numberToBuffer,
+  testNumberConversion,
 
   // BLE基础操作
   scanDevices,
@@ -728,6 +750,5 @@ export default {
   
   // 控制功能
   setRunDuration,
-  setStopDuration,
-  setSystemControl
+  setStopDuration
 }

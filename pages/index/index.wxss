@@ -283,11 +283,85 @@ button[disabled] {
   gap: 20rpx;
 }
 
-.control-slider {
-  flex: 1;
-  margin: 0;
+/* 新的输入组样式 */
+.input-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+  width: 100%;
 }
 
+/* 新的输入框样式 */
+.control-input-new {
+  flex: 1;
+  height: 80rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 32rpx;
+  background-color: #fff;
+  color: #333;
+  min-width: 120rpx;
+  max-width: 200rpx;
+  font-weight: bold;
+}
+
+/* 小按钮样式 */
+.control-btn-small {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 12rpx;
+  font-size: 40rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #e0e0e0;
+  background-color: #f8f9fa;
+  color: #333;
+  padding: 0;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+/* 增加按钮样式 */
+.increase-btn {
+  background-color: #07c160;
+  color: white;
+  border-color: #07c160;
+}
+
+.increase-btn:active {
+  background-color: #059a4c;
+  transform: scale(0.95);
+}
+
+.increase-btn:disabled {
+  background-color: #e0e0e0;
+  color: #999;
+  border-color: #e0e0e0;
+}
+
+/* 减少按钮样式 */
+.decrease-btn {
+  background-color: #ff4757;
+  color: white;
+  border-color: #ff4757;
+}
+
+.decrease-btn:active {
+  background-color: #e03e4a;
+  transform: scale(0.95);
+}
+
+.decrease-btn:disabled {
+  background-color: #e0e0e0;
+  color: #999;
+  border-color: #e0e0e0;
+}
+
+/* 保留旧的输入框样式以防兼容性问题 */
 .control-input {
   width: 120rpx;
   height: 60rpx;
@@ -296,6 +370,11 @@ button[disabled] {
   text-align: center;
   font-size: 28rpx;
   color: #333;
+}
+
+.control-slider {
+  flex: 1;
+  margin: 0;
 }
 
 .switch-container {
@@ -426,6 +505,7 @@ button[disabled] {
 }
 
 /* 响应式适配 */
+/* 响应式适配 */
 @media (min-width: 768rpx) {
   .control-card,
   .status-card {
@@ -446,6 +526,20 @@ button[disabled] {
     width: 140rpx;
     height: 70rpx;
     font-size: 30rpx;
+  }
+  
+  /* 大屏幕下的新输入组样式 */
+  .control-input-new {
+    height: 90rpx;
+    font-size: 36rpx;
+    min-width: 140rpx;
+    max-width: 220rpx;
+  }
+  
+  .control-btn-small {
+    width: 90rpx;
+    height: 90rpx;
+    font-size: 44rpx;
   }
   
   .control-buttons {
@@ -471,7 +565,6 @@ button[disabled] {
     font-size: 30rpx;
   }
 }
-
 @media (max-width: 480rpx) {
   .control-card,
   .status-card {
@@ -492,6 +585,24 @@ button[disabled] {
     width: 100rpx;
     height: 50rpx;
     font-size: 24rpx;
+  }
+  
+  /* 小屏幕下的新输入组样式 */
+  .input-group {
+    gap: 15rpx;
+  }
+  
+  .control-input-new {
+    height: 70rpx;
+    font-size: 28rpx;
+    min-width: 100rpx;
+    max-width: 150rpx;
+  }
+  
+  .control-btn-small {
+    width: 70rpx;
+    height: 70rpx;
+    font-size: 36rpx;
   }
   
   .control-buttons {

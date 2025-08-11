@@ -17,7 +17,6 @@ Page({
     // 控制参数
     runDuration: 30,     // 运行时长(秒)
     stopDuration: 60,    // 停止间隔(秒)
-    systemControl: false, // 系统开关状态
     isApplying: false,   // 是否正在应用设置
     
     // 系统状态数据
@@ -216,6 +215,9 @@ Page({
       // 连接成功后开始状态刷新
       this.startStatusRefresh()
       
+      // 连接成功后同步一次设备参数到控制区
+      await this.syncInitialControlParameters()
+      
     } catch (error) {
       console.error('连接设备失败:', error)
       let errorMessage = '连接失败，请重试'
@@ -284,17 +286,19 @@ Page({
     return { valid: true, value: num }
   },
 
-  // 运行时长滑块变化
-  onRunDurationChange(e) {
-    const validation = this.validateRunDuration(e.detail.value)
+  // 运行时长增加按钮
+  onRunDurationIncrease() {
+    const newValue = this.data.runDuration + 1
+    const validation = this.validateRunDuration(newValue)
     if (validation.valid) {
       this.setData({ runDuration: validation.value })
     }
   },
 
-  // 运行时长滑块实时变化
-  onRunDurationChanging(e) {
-    const validation = this.validateRunDuration(e.detail.value)
+  // 运行时长减少按钮
+  onRunDurationDecrease() {
+    const newValue = this.data.runDuration - 1
+    const validation = this.validateRunDuration(newValue)
     if (validation.valid) {
       this.setData({ runDuration: validation.value })
     }
@@ -323,17 +327,19 @@ Page({
     }
   },
 
-  // 停止间隔滑块变化
-  onStopDurationChange(e) {
-    const validation = this.validateStopDuration(e.detail.value)
+  // 停止间隔增加按钮
+  onStopDurationIncrease() {
+    const newValue = this.data.stopDuration + 1
+    const validation = this.validateStopDuration(newValue)
     if (validation.valid) {
       this.setData({ stopDuration: validation.value })
     }
   },
 
-  // 停止间隔滑块实时变化
-  onStopDurationChanging(e) {
-    const validation = this.validateStopDuration(e.detail.value)
+  // 停止间隔减少按钮
+  onStopDurationDecrease() {
+    const newValue = this.data.stopDuration - 1
+    const validation = this.validateStopDuration(newValue)
     if (validation.valid) {
       this.setData({ stopDuration: validation.value })
     }
@@ -360,56 +366,6 @@ Page({
       // 恢复有效值
       this.setData({ stopDuration: 60 })
     }
-  },
-
-  // 系统开关变化
-  async onSystemSwitchChange(e) {
-    const systemControl = e.detail.value
-    
-    // 如果未连接设备，不允许切换
-    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
-      this.setData({ systemControl: false })
-      this.showErrorToast('请先连接设备')
-      return
-    }
-
-    // 显示确认对话框
-    const action = systemControl ? '启动' : '停止'
-    wx.showModal({
-      title: '确认操作',
-      content: `确定要${action}电机吗？`,
-      success: async (res) => {
-        if (res.confirm) {
-          this.setData({ systemControl })
-          
-          try {
-            await Ble.setSystemControl(this.data.deviceId, systemControl ? 1 : 0)
-            console.log('系统控制状态已更新:', systemControl)
-            this.showSuccessToast(`${action}成功`)
-            
-            // 立即刷新状态
-            await this.refreshSystemStatus()
-            
-          } catch (error) {
-            console.error('设置系统控制状态失败:', error)
-            
-            let errorMessage = '设置失败，请重试'
-            if (error.errCode === 10004) {
-              errorMessage = '设备通信失败，请检查连接'
-            } else if (error.errCode === 10006) {
-              errorMessage = '设备连接已断开'
-            }
-            
-            this.showErrorToast(errorMessage)
-            // 恢复开关状态
-            this.setData({ systemControl: !systemControl })
-          }
-        } else {
-          // 用户取消，恢复开关状态
-          this.setData({ systemControl: !systemControl })
-        }
-      }
-    })
   },
 
   // 显示错误提示
@@ -454,16 +410,33 @@ Page({
     this.setData({ isApplying: true })
 
     try {
+      console.log('开始应用设置:', {
+        runDuration: this.data.runDuration,
+        stopDuration: this.data.stopDuration
+      })
+      
       // 发送运行时长
+      console.log('步骤1: 设置运行时长')
       await Ble.setRunDuration(this.data.deviceId, this.data.runDuration)
       
+      // 添加延迟确保设置完成
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       // 发送停止间隔
+      console.log('步骤2: 设置停止间隔')
       await Ble.setStopDuration(this.data.deviceId, this.data.stopDuration)
       
+      // 添加延迟确保设置完成
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('所有设置已发送完成')
       this.showSuccessToast('设置已应用')
       
       // 立即刷新状态
+      console.log('步骤3: 刷新系统状态')
       await this.refreshSystemStatus()
+      
+      // 设置成功后不需要更新控制区参数，因为用户刚刚设置了这些参数
       
     } catch (error) {
       console.error('应用设置失败:', error)
@@ -496,8 +469,7 @@ Page({
 
     const defaultSettings = {
       runDuration: 30,
-      stopDuration: 60,
-      systemControl: false
+      stopDuration: 60
     }
     
     this.setData(defaultSettings)
@@ -505,12 +477,14 @@ Page({
     try {
       await Ble.setRunDuration(this.data.deviceId, defaultSettings.runDuration)
       await Ble.setStopDuration(this.data.deviceId, defaultSettings.stopDuration)
-      await Ble.setSystemControl(this.data.deviceId, defaultSettings.systemControl ? 1 : 0)
       
       this.showSuccessToast('已恢复默认设置')
       
       // 立即刷新状态
       await this.refreshSystemStatus()
+      
+      // 恢复默认设置后同步设备参数到控制区
+      await this.syncInitialControlParameters()
       
     } catch (error) {
       console.error('恢复默认设置失败:', error)
@@ -531,6 +505,32 @@ Page({
   },
 
   /* ========== 系统状态管理 ========== */
+
+
+  // 初次连接时同步设备参数到控制区（仅在连接成功时调用一次）
+  async syncInitialControlParameters() {
+    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
+      return
+    }
+
+    try {
+      const statusData = await Ble.getSystemStatus(this.data.deviceId)
+      
+      // 初次连接时，用设备的参数初始化控制区
+      this.setData({
+        runDuration: statusData.runDuration,
+        stopDuration: statusData.stopDuration
+      })
+      
+      console.log('初次连接，控制区参数已同步:', {
+        runDuration: statusData.runDuration,
+        stopDuration: statusData.stopDuration
+      })
+      
+    } catch (error) {
+      console.error('同步初始控制参数失败:', error)
+    }
+  },
 
   // 开始状态刷新
   startStatusRefresh() {
@@ -578,12 +578,9 @@ Page({
         formattedFreeHeap: this.formatMemory(statusData.freeHeap)
       }
       
-      // 更新本地控制参数
+      // 只更新系统状态展示区域，不更新控制区参数
       this.setData({
-        systemStatus: formattedStatusData,
-        runDuration: statusData.runDuration,
-        stopDuration: statusData.stopDuration,
-        systemControl: statusData.state === 1 || statusData.state === 3 // 运行中或启动中视为开启
+        systemStatus: formattedStatusData
       })
       
     } catch (error) {
