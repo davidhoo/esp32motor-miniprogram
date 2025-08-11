@@ -71,76 +71,62 @@
     
     <view class="control-card">
       <!-- 运行时长控制 -->
-      <view class="control-item">
-        <view class="control-label">
-          <text>运行时长</text>
-          <text class="control-value">{{runDuration}}秒</text>
-        </view>
-        <view class="control-content">
-          <view class="input-group">
-            <button
-              class="control-btn-small decrease-btn"
-              bindtap="onRunDurationDecrease"
-              disabled="{{runDuration <= 1}}"
-            >
-              -
-            </button>
-            <input
-              class="control-input-new"
-              type="number"
-              value="{{runDuration}}"
-              min="1"
-              max="999"
-              bindinput="onRunDurationInput"
-              bindblur="onRunDurationBlur"
-            />
-            <button
-              class="control-btn-small increase-btn"
-              bindtap="onRunDurationIncrease"
-              disabled="{{runDuration >= 999}}"
-            >
-              +
-            </button>
-          </view>
-        </view>
+      <view class="control-line">
+        <text class="control-label-line">运行时长：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onRunDurationDecrease"
+          disabled="{{runDuration <= 1}}"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{runDuration}}"
+          min="1"
+          max="999"
+          bindinput="onRunDurationInput"
+          bindblur="onRunDurationBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onRunDurationIncrease"
+          disabled="{{runDuration >= 999}}"
+        >
+          +
+        </button>
+        <text class="control-unit">秒</text>
       </view>
       
       <!-- 停止间隔控制 -->
-      <view class="control-item">
-        <view class="control-label">
-          <text>停止间隔</text>
-          <text class="control-value">{{stopDuration}}秒</text>
-        </view>
-        <view class="control-content">
-          <view class="input-group">
-            <button
-              class="control-btn-small decrease-btn"
-              bindtap="onStopDurationDecrease"
-              disabled="{{stopDuration <= 0}}"
-            >
-              -
-            </button>
-            <input
-              class="control-input-new"
-              type="number"
-              value="{{stopDuration}}"
-              min="0"
-              max="999"
-              bindinput="onStopDurationInput"
-              bindblur="onStopDurationBlur"
-            />
-            <button
-              class="control-btn-small increase-btn"
-              bindtap="onStopDurationIncrease"
-              disabled="{{stopDuration >= 999}}"
-            >
-              +
-            </button>
-          </view>
-        </view>
+      <view class="control-line">
+        <text class="control-label-line">停止间隔：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onStopDurationDecrease"
+          disabled="{{stopDuration <= 0}}"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{stopDuration}}"
+          min="0"
+          max="999"
+          bindinput="onStopDurationInput"
+          bindblur="onStopDurationBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onStopDurationIncrease"
+          disabled="{{stopDuration >= 999}}"
+        >
+          +
+        </button>
+        <text class="control-unit">秒</text>
       </view>
-      
-      <!-- 系统开关控制已删除 -->
     </view>
   </view>
 
