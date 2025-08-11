@@ -14,6 +14,12 @@ Page({
     scanTimeout: null,
     buttonText: '扫描设备',
     
+    // 控制参数
+    runDuration: 30,     // 运行时长(秒)
+    stopDuration: 60,    // 停止间隔(秒)
+    systemControl: false, // 系统开关状态
+    isApplying: false,   // 是否正在应用设置
+    
     // 系统状态数据
     systemStatus: {
       state: 0,                    // 状态码 (0=停止, 1=运行中, 2=暂停, 3=启动中)
@@ -109,7 +115,6 @@ Page({
   },
 
   // 扫描设备
-  // 扫描设备
   async scanDevices() {
     this.setData({
       isScanning: true,
@@ -169,7 +174,6 @@ Page({
     }
   },
 
-
   // 选择设备
   onSelectDevice(e) {
     const { deviceId, deviceName } = e.currentTarget.dataset
@@ -200,17 +204,17 @@ Page({
         throw new Error('连接验证失败')
       }
       
-            this.setData({
-              connectionStatus: 'connected',
-              deviceId,
-              deviceName,
-              isConnecting: false,
-              errorMessage: '',
-              buttonText: '断开连接'
-            })
-            
-            // 连接成功后开始状态刷新
-            this.startStatusRefresh()
+      this.setData({
+        connectionStatus: 'connected',
+        deviceId,
+        deviceName,
+        isConnecting: false,
+        errorMessage: '',
+        buttonText: '断开连接'
+      })
+      
+      // 连接成功后开始状态刷新
+      this.startStatusRefresh()
       
     } catch (error) {
       console.error('连接设备失败:', error)
@@ -225,15 +229,14 @@ Page({
         errorMessage = '连接失败，请重新扫描设备'
       }
       
-            this.setData({
-              connectionStatus: 'failed',
-              isConnecting: false,
-              errorMessage,
-              buttonText: '扫描设备'
-            })
+      this.setData({
+        connectionStatus: 'failed',
+        isConnecting: false,
+        errorMessage,
+        buttonText: '扫描设备'
+      })
     }
   },
-
 
   // 断开设备连接
   async disconnectDevice() {
@@ -241,17 +244,289 @@ Page({
 
     try {
       await Ble.disconnectDevice(this.data.deviceId)
-            this.setData({
-              connectionStatus: 'disconnected',
-              deviceId: '',
-              deviceName: '',
-              buttonText: '扫描设备'
-            })
-            
-            // 断开连接后停止状态刷新
-            this.stopStatusRefresh()
+      this.setData({
+        connectionStatus: 'disconnected',
+        deviceId: '',
+        deviceName: '',
+        buttonText: '扫描设备'
+      })
+      
+      // 断开连接后停止状态刷新
+      this.stopStatusRefresh()
     } catch (error) {
       console.error('断开连接失败:', error)
+    }
+  },
+
+  /* ========== 电机控制功能 ========== */
+
+  // 验证运行时长
+  validateRunDuration(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 1 || num > 999) {
+      return { valid: false, message: '运行时长应在1-999秒之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证停止间隔
+  validateStopDuration(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 0 || num > 999) {
+      return { valid: false, message: '停止间隔应在0-999秒之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 运行时长滑块变化
+  onRunDurationChange(e) {
+    const validation = this.validateRunDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ runDuration: validation.value })
+    }
+  },
+
+  // 运行时长滑块实时变化
+  onRunDurationChanging(e) {
+    const validation = this.validateRunDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ runDuration: validation.value })
+    }
+  },
+
+  // 运行时长输入框变化
+  onRunDurationInput(e) {
+    const validation = this.validateRunDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ runDuration: validation.value })
+    }
+  },
+
+  // 运行时长输入框失焦验证
+  onRunDurationBlur(e) {
+    const validation = this.validateRunDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ runDuration: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+      // 恢复有效值
+      this.setData({ runDuration: 30 })
+    }
+  },
+
+  // 停止间隔滑块变化
+  onStopDurationChange(e) {
+    const validation = this.validateStopDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ stopDuration: validation.value })
+    }
+  },
+
+  // 停止间隔滑块实时变化
+  onStopDurationChanging(e) {
+    const validation = this.validateStopDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ stopDuration: validation.value })
+    }
+  },
+
+  // 停止间隔输入框变化
+  onStopDurationInput(e) {
+    const validation = this.validateStopDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ stopDuration: validation.value })
+    }
+  },
+
+  // 停止间隔输入框失焦验证
+  onStopDurationBlur(e) {
+    const validation = this.validateStopDuration(e.detail.value)
+    if (validation.valid) {
+      this.setData({ stopDuration: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+      // 恢复有效值
+      this.setData({ stopDuration: 60 })
+    }
+  },
+
+  // 系统开关变化
+  async onSystemSwitchChange(e) {
+    const systemControl = e.detail.value
+    
+    // 如果未连接设备，不允许切换
+    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
+      this.setData({ systemControl: false })
+      this.showErrorToast('请先连接设备')
+      return
+    }
+
+    // 显示确认对话框
+    const action = systemControl ? '启动' : '停止'
+    wx.showModal({
+      title: '确认操作',
+      content: `确定要${action}电机吗？`,
+      success: async (res) => {
+        if (res.confirm) {
+          this.setData({ systemControl })
+          
+          try {
+            await Ble.setSystemControl(this.data.deviceId, systemControl ? 1 : 0)
+            console.log('系统控制状态已更新:', systemControl)
+            this.showSuccessToast(`${action}成功`)
+            
+            // 立即刷新状态
+            await this.refreshSystemStatus()
+            
+          } catch (error) {
+            console.error('设置系统控制状态失败:', error)
+            
+            let errorMessage = '设置失败，请重试'
+            if (error.errCode === 10004) {
+              errorMessage = '设备通信失败，请检查连接'
+            } else if (error.errCode === 10006) {
+              errorMessage = '设备连接已断开'
+            }
+            
+            this.showErrorToast(errorMessage)
+            // 恢复开关状态
+            this.setData({ systemControl: !systemControl })
+          }
+        } else {
+          // 用户取消，恢复开关状态
+          this.setData({ systemControl: !systemControl })
+        }
+      }
+    })
+  },
+
+  // 显示错误提示
+  showErrorToast(message) {
+    wx.showToast({
+      title: message,
+      icon: 'none',
+      duration: 2000
+    })
+  },
+
+  // 显示成功提示
+  showSuccessToast(message) {
+    wx.showToast({
+      title: message,
+      icon: 'success',
+      duration: 1500
+    })
+  },
+
+  // 应用设置
+  async onApplySettings() {
+    if (!this.data.deviceId || this.data.connectionStatus !== 'connected') {
+      this.showErrorToast('请先连接设备')
+      return
+    }
+
+    // 验证参数
+    const runValidation = this.validateRunDuration(this.data.runDuration)
+    const stopValidation = this.validateStopDuration(this.data.stopDuration)
+
+    if (!runValidation.valid) {
+      this.showErrorToast(runValidation.message)
+      return
+    }
+
+    if (!stopValidation.valid) {
+      this.showErrorToast(stopValidation.message)
+      return
+    }
+
+    this.setData({ isApplying: true })
+
+    try {
+      // 发送运行时长
+      await Ble.setRunDuration(this.data.deviceId, this.data.runDuration)
+      
+      // 发送停止间隔
+      await Ble.setStopDuration(this.data.deviceId, this.data.stopDuration)
+      
+      this.showSuccessToast('设置已应用')
+      
+      // 立即刷新状态
+      await this.refreshSystemStatus()
+      
+    } catch (error) {
+      console.error('应用设置失败:', error)
+      
+      let errorMessage = '设置失败，请重试'
+      
+      // 根据错误类型提供更具体的错误信息
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败，请检查连接'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.errCode === 10012) {
+        errorMessage = '设备未响应，请重试'
+      } else if (error.errMsg && error.errMsg.includes('write')) {
+        errorMessage = '写入失败，请检查设备状态'
+      }
+      
+      this.showErrorToast(errorMessage)
+    } finally {
+      this.setData({ isApplying: false })
+    }
+  },
+
+  // 恢复默认设置
+  async onResetSettings() {
+    if (!this.data.deviceId || this.data.connectionStatus !== 'connected') {
+      this.showErrorToast('请先连接设备')
+      return
+    }
+
+    const defaultSettings = {
+      runDuration: 30,
+      stopDuration: 60,
+      systemControl: false
+    }
+    
+    this.setData(defaultSettings)
+    
+    try {
+      await Ble.setRunDuration(this.data.deviceId, defaultSettings.runDuration)
+      await Ble.setStopDuration(this.data.deviceId, defaultSettings.stopDuration)
+      await Ble.setSystemControl(this.data.deviceId, defaultSettings.systemControl ? 1 : 0)
+      
+      this.showSuccessToast('已恢复默认设置')
+      
+      // 立即刷新状态
+      await this.refreshSystemStatus()
+      
+    } catch (error) {
+      console.error('恢复默认设置失败:', error)
+      
+      let errorMessage = '恢复失败，请重试'
+      
+      // 根据错误类型提供更具体的错误信息
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败，请检查连接'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.errCode === 10012) {
+        errorMessage = '设备未响应，请重试'
+      }
+      
+      this.showErrorToast(errorMessage)
     }
   },
 
@@ -295,20 +570,6 @@ Page({
 
     try {
       const statusData = await Ble.getSystemStatus(this.data.deviceId)
-      console.log('=== 页面接收到的状态数据 ===')
-      console.log('原始statusData:', statusData)
-      console.log('各字段值:')
-      console.log('  state:', statusData.state, '(类型:', typeof statusData.state, ')')
-      console.log('  stateName:', statusData.stateName, '(类型:', typeof statusData.stateName, ')')
-      console.log('  remainingRunTime:', statusData.remainingRunTime, '(类型:', typeof statusData.remainingRunTime, ')')
-      console.log('  remainingStopTime:', statusData.remainingStopTime, '(类型:', typeof statusData.remainingStopTime, ')')
-      console.log('  currentCycleCount:', statusData.currentCycleCount, '(类型:', typeof statusData.currentCycleCount, ')')
-      console.log('  runDuration:', statusData.runDuration, '(类型:', typeof statusData.runDuration, ')')
-      console.log('  stopDuration:', statusData.stopDuration, '(类型:', typeof statusData.stopDuration, ')')
-      console.log('  cycleCount:', statusData.cycleCount, '(类型:', typeof statusData.cycleCount, ')')
-      console.log('  autoStart:', statusData.autoStart, '(类型:', typeof statusData.autoStart, ')')
-      console.log('  uptime:', statusData.uptime, '(类型:', typeof statusData.uptime, ')')
-      console.log('  freeHeap:', statusData.freeHeap, '(类型:', typeof statusData.freeHeap, ')')
       
       // 格式化显示数据
       const formattedStatusData = {
@@ -317,28 +578,41 @@ Page({
         formattedFreeHeap: this.formatMemory(statusData.freeHeap)
       }
       
-      console.log('格式化后的数据:', formattedStatusData)
-      console.log('当前页面systemStatus:', this.data.systemStatus)
-      console.log('当前页面systemStatus:', this.data.systemStatus)
-      
+      // 更新本地控制参数
       this.setData({
-        systemStatus: formattedStatusData
+        systemStatus: formattedStatusData,
+        runDuration: statusData.runDuration,
+        stopDuration: statusData.stopDuration,
+        systemControl: statusData.state === 1 || statusData.state === 3 // 运行中或启动中视为开启
       })
-      
-      console.log('setData后的systemStatus:', this.data.systemStatus)
       
     } catch (error) {
       console.error('获取系统状态失败:', error)
+      
+      // 根据错误类型处理
+      let errorMessage = '获取状态失败'
+      
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.errCode === 10012) {
+        errorMessage = '设备未响应'
+      }
+      
       // 如果获取状态失败，可能是连接断开了
-      if (error.errCode === 10004 || error.errCode === 10006) {
+      if (error.errCode === 10004 || error.errCode === 10006 || error.errCode === 10012) {
         this.setData({
           connectionStatus: 'disconnected',
           deviceId: '',
           deviceName: '',
           buttonText: '扫描设备',
-          errorMessage: '设备连接已断开'
+          errorMessage: errorMessage
         })
         this.stopStatusRefresh()
+        
+        // 显示错误提示
+        this.showErrorToast(errorMessage)
       }
     }
   },
@@ -397,5 +671,4 @@ Page({
       icon: '⚪'
     }
   }
-
 })
