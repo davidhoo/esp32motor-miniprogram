@@ -55,6 +55,11 @@
       <view class="error-message" wx:if="{{errorMessage}}">
         <text>{{errorMessage}}</text>
       </view>
+      
+      <!-- 自动重试状态 -->
+      <view class="retry-status" wx:if="{{autoRetryTimer && retryCount > 0}}">
+        <text>自动重试中... {{retryCount}}/{{maxRetryCount}}</text>
+      </view>
     </view>
   </view>
 
