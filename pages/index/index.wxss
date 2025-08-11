@@ -217,12 +217,36 @@
 .error-message {
   margin-top: 20rpx;
   padding: 20rpx;
-  background-color: #fff2e8;
-  border: 1rpx solid #ffbb96;
+  background-color: #fee;
+  border: 1rpx solid #fcc;
   border-radius: 8rpx;
-  color: #fa541c;
+  color: #c33;
   font-size: 28rpx;
   text-align: center;
+}
+
+.retry-status {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #e3f2fd;
+  border: 1rpx solid #90caf9;
+  border-radius: 8rpx;
+  color: #1976d2;
+  font-size: 28rpx;
+  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* 禁用状态样式 */

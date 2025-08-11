@@ -37,7 +37,12 @@ Page({
     },
     
     // 状态刷新定时器
-    statusTimer: null
+    statusTimer: null,
+    // 自动重试相关
+    autoRetryTimer: null,
+    retryCount: 0,
+    maxRetryCount: 10, // 2分钟内最多重试10次（每12秒一次）
+    retryInterval: 12000 // 12秒重试间隔
   },
 
   onLoad() {
@@ -49,6 +54,16 @@ Page({
     // 清除定时器
     if (this.data.statusTimer) {
       clearInterval(this.data.statusTimer)
+    }
+    
+    // 清除自动重试定时器
+    if (this.data.autoRetryTimer) {
+      clearTimeout(this.data.autoRetryTimer)
+    }
+    
+    // 清除扫描超时定时器
+    if (this.data.scanTimeout) {
+      clearTimeout(this.data.scanTimeout)
     }
     
     // 断开连接
@@ -115,6 +130,11 @@ Page({
 
   // 扫描设备
   async scanDevices() {
+    // 如果已经在扫描中，不重复启动
+    if (this.data.isScanning) {
+      return
+    }
+
     this.setData({
       isScanning: true,
       errorMessage: '',
@@ -122,28 +142,10 @@ Page({
       showDeviceList: false,
       buttonText: '扫描设备中...'
     })
-    // 设置2分钟超时
-    const scanTimeout = setTimeout(() => {
-      if (this.data.isScanning) {
-        this.setData({
-          isScanning: false,
-          errorMessage: '扫描超时，未找到ESP32-Motor设备',
-          buttonText: '扫描设备'
-        })
-      }
-    }, 120000)
-
-    this.setData({ scanTimeout })
 
     try {
       const devices = await Ble.scanDevices()
       
-      // 清除超时定时器
-      if (this.data.scanTimeout) {
-        clearTimeout(this.data.scanTimeout)
-        this.setData({ scanTimeout: null })
-      }
-
       this.setData({
         devices,
         showDeviceList: true,
@@ -152,24 +154,66 @@ Page({
       })
 
       if (devices.length === 0) {
-        this.setData({
-          errorMessage: '未找到ESP32-Motor设备，请确保设备已开启'
-        })
+        // 没有找到设备，启动自动重试
+        this.startAutoRetry()
+      } else {
+        // 找到设备，停止自动重试
+        this.stopAutoRetry()
       }
     } catch (error) {
       console.error('扫描设备失败:', error)
       
-      // 清除超时定时器
-      if (this.data.scanTimeout) {
-        clearTimeout(this.data.scanTimeout)
-        this.setData({ scanTimeout: null })
-      }
-
       this.setData({
-        errorMessage: '扫描设备失败，请重试',
+        errorMessage: '扫描设备失败，将自动重试...',
         isScanning: false,
         buttonText: '扫描设备'
       })
+      
+      // 扫描失败，启动自动重试
+      this.startAutoRetry()
+    }
+  },
+
+  // 启动自动重试
+  startAutoRetry() {
+    // 清除之前的重试定时器
+    this.stopAutoRetry()
+    
+    // 重置重试计数
+    this.setData({ retryCount: 0 })
+    
+    const doRetry = () => {
+      if (this.data.retryCount >= this.data.maxRetryCount) {
+        // 达到最大重试次数
+        this.setData({
+          errorMessage: '2分钟内未找到设备，请检查设备是否开启',
+          buttonText: '扫描设备'
+        })
+        this.stopAutoRetry()
+        return
+      }
+
+      this.setData({
+        retryCount: this.data.retryCount + 1,
+        errorMessage: `正在自动重试扫描...(${this.data.retryCount}/${this.data.maxRetryCount})`
+      })
+
+      console.log(`自动重试扫描第 ${this.data.retryCount} 次`)
+      
+      // 执行扫描
+      this.scanDevices()
+    }
+
+    // 设置定时器，按指定间隔重试
+    const autoRetryTimer = setTimeout(doRetry, this.data.retryInterval)
+    this.setData({ autoRetryTimer })
+  },
+
+  // 停止自动重试
+  stopAutoRetry() {
+    if (this.data.autoRetryTimer) {
+      clearTimeout(this.data.autoRetryTimer)
+      this.setData({ autoRetryTimer: null })
     }
   },
 
