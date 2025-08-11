@@ -786,3 +786,14 @@ button[disabled] {
 .system-switch:active {
   transform: scale(1.1);
 }
+
+/* 系统开关控制样式 */
+.control-item:last-child {
+  margin-bottom: 0;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.control-item:last-child .control-content {
+  justify-content: flex-end;
+}

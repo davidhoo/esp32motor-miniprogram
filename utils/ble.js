@@ -8,6 +8,7 @@ const SERVICE_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
 const CHARACTERISTIC_UUIDS = {
   RUN_DURATION: '2f7a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c6',    // 运行时长
   STOP_INTERVAL: '3f8a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c7',   // 停止间隔
+  // SYSTEM_CONTROL: '4f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c8',  // 系统控制 - 已删除
   STATUS_QUERY: '5f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c9'     // 状态查询
 }
 
@@ -114,6 +115,47 @@ function numberToBuffer(value, bytes = 4) {
   }
   
   return buffer
+}
+
+/**
+ * 将字符串转换为ArrayBuffer（UTF-8编码）
+ * @param {string} str - 要转换的字符串
+ * @returns {ArrayBuffer} - 转换后的ArrayBuffer
+ */
+function stringToBuffer(str) {
+  if (typeof str !== 'string') {
+    str = String(str)
+  }
+  
+  // 使用微信小程序兼容的方式转换UTF-8
+  const encoder = {
+    encode: function(str) {
+      const bytes = []
+      for (let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i)
+        
+        if (charCode < 0x80) {
+          bytes.push(charCode)
+        } else if (charCode < 0x800) {
+          bytes.push(0xC0 | (charCode >> 6))
+          bytes.push(0x80 | (charCode & 0x3F))
+        } else if (charCode < 0x10000) {
+          bytes.push(0xE0 | (charCode >> 12))
+          bytes.push(0x80 | ((charCode >> 6) & 0x3F))
+          bytes.push(0x80 | (charCode & 0x3F))
+        } else {
+          bytes.push(0xF0 | (charCode >> 18))
+          bytes.push(0x80 | ((charCode >> 12) & 0x3F))
+          bytes.push(0x80 | ((charCode >> 6) & 0x3F))
+          bytes.push(0x80 | (charCode & 0x3F))
+        }
+      }
+      return new Uint8Array(bytes)
+    }
+  }
+  
+  const encoded = encoder.encode(str)
+  return encoded.buffer
 }
 
 /**
@@ -543,16 +585,34 @@ async function setRunDuration(deviceId, duration) {
   try {
     console.log('设置运行时长:', { deviceId, duration })
     
+    // 验证输入参数
+    if (typeof duration !== 'number' && typeof duration !== 'string') {
+      throw new Error(`无效的运行时长参数类型: ${typeof duration}`)
+    }
+    
+    const durationNum = parseInt(duration)
+    if (isNaN(durationNum) || durationNum < 1 || durationNum > 999) {
+      throw new Error(`无效的运行时长参数值: ${duration}`)
+    }
+    
     // 获取目标服务和特征值
     const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
       deviceId,
       CHARACTERISTIC_UUIDS.RUN_DURATION
     )
     
-    // 将时长转换为4字节小端格式
-    const buffer = numberToBuffer(duration, 4)
+    console.log('运行时长特征值信息:', {
+      serviceId,
+      characteristicId,
+      targetUUID: CHARACTERISTIC_UUIDS.RUN_DURATION
+    })
+    
+    // 将时长转换为字符串格式
+    const durationStr = String(durationNum)
+    const buffer = stringToBuffer(durationStr)
     console.log('运行时长数据转换:', {
-      原始值: duration,
+      原始值: durationNum,
+      字符串值: durationStr,
       转换后的十六进制: bufferToHex(buffer),
       字节长度: buffer.byteLength
     })
@@ -560,7 +620,7 @@ async function setRunDuration(deviceId, duration) {
     // 写入特征值
     await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
     
-    console.log('运行时长设置成功:', duration)
+    console.log('运行时长设置成功:', durationStr)
     return true
     
   } catch (error) {
@@ -579,9 +639,15 @@ async function setStopDuration(deviceId, duration) {
   try {
     console.log('设置停止间隔:', { deviceId, duration })
     
-    // 测试数据转换
-    const conversionTest = testNumberConversion(duration)
-    console.log('停止间隔数据转换测试:', conversionTest)
+    // 验证输入参数
+    if (typeof duration !== 'number' && typeof duration !== 'string') {
+      throw new Error(`无效的停止间隔参数类型: ${typeof duration}`)
+    }
+    
+    const durationNum = parseInt(duration)
+    if (isNaN(durationNum) || durationNum < 0 || durationNum > 999) {
+      throw new Error(`无效的停止间隔参数值: ${duration}`)
+    }
     
     // 获取目标服务和特征值
     const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
@@ -595,19 +661,20 @@ async function setStopDuration(deviceId, duration) {
       targetUUID: CHARACTERISTIC_UUIDS.STOP_INTERVAL
     })
     
-    // 将时长转换为4字节小端格式
-    const buffer = numberToBuffer(duration, 4)
+    // 将时长转换为字符串格式
+    const durationStr = String(durationNum)
+    const buffer = stringToBuffer(durationStr)
     console.log('停止间隔数据转换:', {
-      原始值: duration,
+      原始值: durationNum,
+      字符串值: durationStr,
       转换后的十六进制: bufferToHex(buffer),
-      字节长度: buffer.byteLength,
-      字节数组: Array.from(new Uint8Array(buffer))
+      字节长度: buffer.byteLength
     })
     
     // 写入特征值
     await writeCharacteristic(deviceId, serviceId, characteristicId, buffer)
     
-    console.log('停止间隔设置成功:', duration)
+    console.log('停止间隔设置成功:', durationStr)
     return true
     
   } catch (error) {
@@ -616,107 +683,101 @@ async function setStopDuration(deviceId, duration) {
   }
 }
 
+// 系统控制相关函数已删除
 
 /**
- * 获取系统状态
+ * 获取系统状态（单次尝试）
  * @param {string} deviceId - 设备ID
  * @returns {Promise<Object>} - 系统状态对象
  */
-async function getSystemStatus(deviceId) {
-  try {
-    console.log('开始获取系统状态:', deviceId)
-    
-    // 获取目标服务和特征值
-    const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
-      deviceId,
-      CHARACTERISTIC_UUIDS.STATUS_QUERY
-    )
-    
-    // 读取状态查询特征值
-    const buffer = await readCharacteristic(deviceId, serviceId, characteristicId)
-    
-    // 检查buffer是否有效
-    if (!buffer) {
-      console.warn('读取到的buffer为空，返回默认状态')
-      return {
-        state: 0,
-        stateName: 'STOPPED',
-        remainingRunTime: 0,
-        remainingStopTime: 0,
-        currentCycleCount: 0,
-        runDuration: 30,
-        stopDuration: 60,
-        cycleCount: 0,
-        autoStart: false,
-        uptime: 0,
-        freeHeap: 0
-      }
-    }
-    
-    // 将ArrayBuffer转换为字符串
-    const jsonString = bufferToString(buffer)
-    
-    // 检查是否为空数据
-    if (!jsonString || jsonString.trim().length === 0) {
-      console.warn('接收到空的状态数据，返回默认状态')
-      return {
-        state: 0,
-        stateName: 'STOPPED',
-        remainingRunTime: 0,
-        remainingStopTime: 0,
-        currentCycleCount: 0,
-        runDuration: 30,
-        stopDuration: 60,
-        cycleCount: 0,
-        autoStart: false,
-        uptime: 0,
-        freeHeap: 0
-      }
-    }
-    
-    // 解析JSON数据
-    let statusData
-    try {
-      statusData = JSON.parse(jsonString.trim())
-    } catch (parseError) {
-      console.error('JSON解析失败:', parseError)
-      return {
-        state: 0,
-        stateName: 'STOPPED',
-        remainingRunTime: 0,
-        remainingStopTime: 0,
-        currentCycleCount: 0,
-        runDuration: 30,
-        stopDuration: 60,
-        cycleCount: 0,
-        autoStart: false,
-        uptime: 0,
-        freeHeap: 0
-      }
-    }
-    
-    // 直接使用实际返回的字段结构
-    const systemStatus = {
-      state: statusData.state || 0,
-      stateName: statusData.stateName || 'STOPPED',
-      remainingRunTime: statusData.remainingRunTime || 0,
-      remainingStopTime: statusData.remainingStopTime || 0,
-      currentCycleCount: statusData.currentCycleCount || 0,
-      runDuration: statusData.runDuration || 30,
-      stopDuration: statusData.stopDuration || 60,
-      cycleCount: statusData.cycleCount || 0,
-      autoStart: statusData.autoStart || false,
-      uptime: statusData.uptime || 0,
-      freeHeap: statusData.freeHeap || 0
-    }
-    
-    console.log('获取系统状态成功:', systemStatus)
-    return systemStatus
-    
-  } catch (error) {
-    console.error('获取系统状态失败:', error)
-    throw error
+async function getSystemStatusOnce(deviceId) {
+  console.log('开始获取系统状态:', deviceId)
+  
+  // 获取目标服务和特征值
+  const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
+    deviceId,
+    CHARACTERISTIC_UUIDS.STATUS_QUERY
+  )
+  
+  // 读取状态查询特征值
+  const buffer = await readCharacteristic(deviceId, serviceId, characteristicId)
+  
+  // 检查buffer是否有效
+  if (!buffer) {
+    throw new Error('读取到的buffer为空')
   }
+  
+  // 将ArrayBuffer转换为字符串
+  const jsonString = bufferToString(buffer)
+  
+  // 检查是否为空数据
+  if (!jsonString || jsonString.trim().length === 0) {
+    throw new Error('接收到空的状态数据')
+  }
+  
+  // 解析JSON数据
+  let statusData
+  try {
+    statusData = JSON.parse(jsonString.trim())
+  } catch (parseError) {
+    console.error('JSON解析失败:', parseError)
+    throw new Error(`JSON解析失败: ${parseError.message}`)
+  }
+  
+  // 直接使用实际返回的字段结构
+  const systemStatus = {
+    state: statusData.state || 0,
+    stateName: statusData.stateName || 'STOPPED',
+    remainingRunTime: statusData.remainingRunTime || 0,
+    remainingStopTime: statusData.remainingStopTime || 0,
+    currentCycleCount: statusData.currentCycleCount || 0,
+    runDuration: statusData.runDuration || 30,
+    stopDuration: statusData.stopDuration || 60,
+    cycleCount: statusData.cycleCount || 0,
+    autoStart: statusData.autoStart || false,
+    uptime: statusData.uptime || 0,
+    freeHeap: statusData.freeHeap || 0
+  }
+  
+  console.log('获取系统状态成功:', systemStatus)
+  return systemStatus
+}
+
+/**
+ * 获取系统状态（带重试机制）
+ * @param {string} deviceId - 设备ID
+ * @param {number} maxRetries - 最大重试次数
+ * @param {number} retryDelay - 重试延迟(毫秒)
+ * @returns {Promise<Object>} - 系统状态对象
+ */
+async function getSystemStatus(deviceId, maxRetries = 3, retryDelay = 1000) {
+  let lastError = null
+  
+  console.log(`开始带重试的系统状态获取 (最多${maxRetries}次):`, deviceId)
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`尝试获取系统状态 (${attempt}/${maxRetries}):`, deviceId)
+      const status = await getSystemStatusOnce(deviceId)
+      console.log('✅ 系统状态获取成功:', status)
+      return status
+    } catch (error) {
+      lastError = error
+      console.warn(`获取系统状态尝试 ${attempt} 失败:`, {
+        attempt,
+        errorMessage: error.message
+      })
+      
+      if (attempt < maxRetries) {
+        const currentDelay = retryDelay * attempt // 递增延迟
+        console.log(`等待 ${currentDelay}ms 后重试...`)
+        await new Promise(resolve => setTimeout(resolve, currentDelay))
+      }
+    }
+  }
+  
+  console.error('❌ 所有获取系统状态尝试失败:', lastError)
+  throw lastError
 }
 
 // 导出模块
@@ -730,6 +791,7 @@ export default {
   bufferToHex,
   bufferToString,
   numberToBuffer,
+  stringToBuffer,
   testNumberConversion,
 
   // BLE基础操作
@@ -747,8 +809,10 @@ export default {
   
   // 状态查询功能
   getSystemStatus,
+  // getSystemControlStatus已删除
   
   // 控制功能
   setRunDuration,
   setStopDuration
+  // setSystemControl已删除
 }

@@ -33,7 +33,8 @@ Page({
       uptime: 0,                   // 系统运行时间(秒)
       freeHeap: 0,                 // 空闲堆内存(字节)
       formattedUptime: '00:00:00', // 格式化的运行时间显示
-      formattedFreeHeap: '0KB'     // 格式化的内存显示
+      formattedFreeHeap: '0KB',    // 格式化的内存显示
+      // systemControl字段已删除
     },
     
     // 状态刷新定时器
@@ -273,8 +274,7 @@ Page({
       // 连接成功后开始状态刷新
       this.startStatusRefresh()
       
-      // 连接成功后同步一次设备参数到控制区
-      await this.syncInitialControlParameters()
+      // 同步设备参数功能已删除
       
     } catch (error) {
       console.error('连接设备失败:', error)
@@ -380,8 +380,7 @@ Page({
         title: validation.message,
         icon: 'none'
       })
-      // 恢复有效值
-      this.setData({ runDuration: 30 })
+      // 默认值逻辑已删除
     }
   },
 
@@ -421,8 +420,7 @@ Page({
         title: validation.message,
         icon: 'none'
       })
-      // 恢复有效值
-      this.setData({ stopDuration: 60 })
+      // 默认值逻辑已删除
     }
   },
 
@@ -444,109 +442,12 @@ Page({
     })
   },
 
-  // 应用设置
-  async onApplySettings() {
-    if (!this.data.deviceId || this.data.connectionStatus !== 'connected') {
-      this.showErrorToast('请先连接设备')
-      return
-    }
-
-    // 验证参数
-    const runValidation = this.validateRunDuration(this.data.runDuration)
-    const stopValidation = this.validateStopDuration(this.data.stopDuration)
-
-    if (!runValidation.valid) {
-      this.showErrorToast(runValidation.message)
-      return
-    }
-
-    if (!stopValidation.valid) {
-      this.showErrorToast(stopValidation.message)
-      return
-    }
-
-    this.setData({ isApplying: true })
-
-    try {
-      console.log('开始应用设置:', {
-        runDuration: this.data.runDuration,
-        stopDuration: this.data.stopDuration
-      })
-      
-      // 发送运行时长
-      console.log('步骤1: 设置运行时长')
-      await Ble.setRunDuration(this.data.deviceId, this.data.runDuration)
-      
-      // 添加延迟确保设置完成
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // 发送停止间隔
-      console.log('步骤2: 设置停止间隔')
-      await Ble.setStopDuration(this.data.deviceId, this.data.stopDuration)
-      
-      // 添加延迟确保设置完成
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      console.log('所有设置已发送完成')
-      this.showSuccessToast('设置已应用')
-      
-      // 立即刷新状态
-      console.log('步骤3: 刷新系统状态')
-      await this.refreshSystemStatus()
-      
-      // 设置成功后不需要更新控制区参数，因为用户刚刚设置了这些参数
-      
-    } catch (error) {
-      console.error('应用设置失败:', error)
-      
-      let errorMessage = '设置失败，请重试'
-      
-      // 根据错误类型提供更具体的错误信息
-      if (error.errCode === 10004) {
-        errorMessage = '设备通信失败，请检查连接'
-      } else if (error.errCode === 10006) {
-        errorMessage = '设备连接已断开'
-      } else if (error.errCode === 10012) {
-        errorMessage = '设备未响应，请重试'
-      } else if (error.errMsg && error.errMsg.includes('write')) {
-        errorMessage = '写入失败，请检查设备状态'
-      }
-      
-      this.showErrorToast(errorMessage)
-    } finally {
-      this.setData({ isApplying: false })
-    }
-  },
-
-  // 恢复默认设置功能已删除
+  // 应用设置功能已删除
 
   /* ========== 系统状态管理 ========== */
+  // 系统开关控制功能已删除
 
-
-  // 初次连接时同步设备参数到控制区（仅在连接成功时调用一次）
-  async syncInitialControlParameters() {
-    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
-      return
-    }
-
-    try {
-      const statusData = await Ble.getSystemStatus(this.data.deviceId)
-      
-      // 初次连接时，用设备的参数初始化控制区
-      this.setData({
-        runDuration: statusData.runDuration,
-        stopDuration: statusData.stopDuration
-      })
-      
-      console.log('初次连接，控制区参数已同步:', {
-        runDuration: statusData.runDuration,
-        stopDuration: statusData.stopDuration
-      })
-      
-    } catch (error) {
-      console.error('同步初始控制参数失败:', error)
-    }
-  },
+  // 同步设备参数功能已删除
 
   // 开始状态刷新
   startStatusRefresh() {
@@ -585,6 +486,7 @@ Page({
     }
 
     try {
+      // 获取系统状态（不再获取系统控制状态）
       const statusData = await Ble.getSystemStatus(this.data.deviceId)
       
       // 格式化显示数据
@@ -594,7 +496,7 @@ Page({
         formattedFreeHeap: this.formatMemory(statusData.freeHeap)
       }
       
-      // 只更新系统状态展示区域，不更新控制区参数
+      // 更新系统状态展示区域
       this.setData({
         systemStatus: formattedStatusData
       })
