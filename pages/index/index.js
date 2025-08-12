@@ -32,6 +32,7 @@ Page({
       autoStart: false,            // 自动启动标志
       uptime: 0,                   // 系统运行时间(秒)
       freeHeap: 0,                 // 空闲堆内存(字节)
+      chipTemperature: 0,          // 芯片温度(摄氏度)
       formattedUptime: '00:00:00', // 格式化的运行时间显示
       formattedFreeHeap: '0KB',    // 格式化的内存显示
       // systemControl字段已删除
@@ -563,6 +564,7 @@ Page({
       // 格式化显示数据
       const formattedStatusData = {
         ...statusData,
+        chipTemperature: Math.round(statusData.chipTemperature || 0),
         formattedUptime: this.formatUptime(statusData.uptime),
         formattedFreeHeap: this.formatMemory(statusData.freeHeap)
       }

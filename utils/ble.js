@@ -736,7 +736,8 @@ async function getSystemStatusOnce(deviceId) {
     cycleCount: statusData.cycleCount || 0,
     autoStart: statusData.autoStart || false,
     uptime: statusData.uptime || 0,
-    freeHeap: statusData.freeHeap || 0
+    freeHeap: statusData.freeHeap || 0,
+    chipTemperature: statusData.chipTemperature || 0
   }
   
   console.log('获取系统状态成功:', systemStatus)
