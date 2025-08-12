@@ -181,6 +181,11 @@
       </view>
       
       <view class="status-row">
+        <text class="status-label">芯片温度:</text>
+        <text class="status-value">{{systemStatus.chipTemperature}}°C</text>
+      </view>
+      
+      <view class="status-row">
         <text class="status-label">当前循环:</text>
         <text class="status-value">{{systemStatus.currentCycleCount}}次</text>
       </view>
