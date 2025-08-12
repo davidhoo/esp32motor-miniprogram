@@ -108,8 +108,12 @@ Page({
             connectionStatus: 'disconnected',
             deviceId: '',
             deviceName: '',
+            buttonText: '扫描设备',
             errorMessage: '设备连接已断开'
           })
+          
+          // 停止状态刷新
+          this.stopStatusRefresh()
         }
       }
     })
