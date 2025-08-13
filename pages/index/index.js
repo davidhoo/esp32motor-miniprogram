@@ -532,25 +532,23 @@ Page({
   // 同步设备参数功能已删除
 
   // 开始状态刷新
+  // 开始状态刷新
   startStatusRefresh() {
     // 清除之前的定时器
-    if (this.data.statusTimer) {
-      clearInterval(this.data.statusTimer)
-    }
+    this.stopStatusRefresh()
     
     // 立即获取一次状态
     this.refreshSystemStatus()
     
-    // 设置定时器，每1秒刷新一次
+    // 设置定时器，每3秒刷新一次
     const timer = setInterval(() => {
       this.refreshSystemStatus()
-    }, 1000)
+    }, 3000)
     
     this.setData({
       statusTimer: timer
     })
   },
-
   // 同步电机控制参数
   syncMotorControlParams() {
     const { systemStatus } = this.data
