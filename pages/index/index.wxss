@@ -449,6 +449,11 @@ button[disabled] {
   margin-top: 20rpx;
 }
 
+/* 调速器状态区样式 */
+.speed-controller-section {
+  margin-top: 20rpx;
+}
+
 .status-row {
   display: flex;
   justify-content: space-between;
