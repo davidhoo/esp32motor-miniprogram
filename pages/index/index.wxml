@@ -211,4 +211,85 @@
       </view>
     </view>
   </view>
+
+  <!-- 调速器状态展示区 -->
+  <view class="section speed-controller-section" wx:if="{{connectionStatus === 'connected' && speedControllerStatus && speedControllerStatus.moduleAddress}}">
+    <view class="section-header">
+      <text class="section-title">🎛️ 调速器状态</text>
+    </view>
+    
+    <view class="status-card">
+      <view class="status-row">
+        <text class="status-label">运行状态:</text>
+        <text class="status-value">
+          <text wx:if="{{speedControllerStatus.isRunning}}">运行中🟢</text>
+          <text wx:else>停止🔴</text>
+        </text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">当前频率:</text>
+        <text class="status-value">{{speedControllerStatus.frequency}}Hz</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">占空比:</text>
+        <text class="status-value">{{speedControllerStatus.dutyCycle}}%</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">外接开关:</text>
+        <text class="status-value">{{speedControllerStatus.externalSwitch ? '开启' : '关闭'}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">0-10V控制:</text>
+        <text class="status-value">{{speedControllerStatus.analogControl ? '开启' : '关闭'}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">开机默认:</text>
+        <text class="status-value">{{speedControllerStatus.powerOnState ? '运行' : '停止'}}</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">最小输出:</text>
+        <text class="status-value">{{speedControllerStatus.minOutput}}%</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">最大输出:</text>
+        <text class="status-value">{{speedControllerStatus.maxOutput}}%</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">缓启动时间:</text>
+        <text class="status-value">{{speedControllerStatus.softStartTime / 10}}秒</text>
+      </view>
+      
+      <view class="status-row">
+        <text class="status-label">缓停止时间:</text>
+        <text class="status-value">{{speedControllerStatus.softStopTime / 10}}秒</text>
+      </view>
+      
+      <view class="status-row" wx:if="{{speedControllerStatus.communication}}">
+        <text class="status-label">通信状态:</text>
+        <text class="status-value">
+          <text wx:if="{{speedControllerStatus.communication.connectionStatus === 'connected'}}">已连接</text>
+          <text wx:elif="{{speedControllerStatus.communication.connectionStatus === 'disconnected'}}">已断开</text>
+          <text wx:else>错误</text>
+        </text>
+      </view>
+      
+      <view class="status-row" wx:if="{{speedControllerStatus.communication}}">
+        <text class="status-label">响应时间:</text>
+        <text class="status-value">{{speedControllerStatus.communication.responseTime}}ms</text>
+      </view>
+      
+      <view class="status-row" wx:if="{{speedControllerStatus.communication}}">
+        <text class="status-label">错误计数:</text>
+        <text class="status-value">{{speedControllerStatus.communication.errorCount}}次</text>
+      </view>
+    </view>
+  </view>
 </view>
