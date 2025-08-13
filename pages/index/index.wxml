@@ -213,7 +213,7 @@
   </view>
 
   <!-- 调速器状态展示区 -->
-  <view class="section speed-controller-section" wx:if="{{connectionStatus === 'connected' && speedControllerStatus && speedControllerStatus.moduleAddress}}">
+  <view class="section speed-controller-section" wx:if="{{connectionStatus === 'connected' && speedControllerStatus}}">
     <view class="section-header">
       <text class="section-title">🎛️ 调速器状态</text>
     </view>

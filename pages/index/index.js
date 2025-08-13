@@ -603,11 +603,18 @@ Page({
       try {
         const speedControllerData = await Ble.getSpeedControllerStatus(this.data.deviceId)
         
-        // 更新调速器状态展示区域
-        this.setData({
-          speedControllerStatus: speedControllerData
-        })
-        
+        // 检查是否有错误信息
+        if (speedControllerData && speedControllerData.error) {
+          // 如果返回了错误信息，视为获取失败
+          console.warn('获取调速器状态失败:', speedControllerData.error)
+          // 调速器状态获取失败时不更新数据，保持原有数据
+          // 不影响系统状态的正常显示
+        } else if (speedControllerData) {
+          // 只有在返回有效数据时才更新调速器状态展示区域
+          this.setData({
+            speedControllerStatus: speedControllerData
+          })
+        }
       } catch (speedError) {
         console.warn('获取调速器状态失败:', speedError)
         // 调速器状态获取失败时不更新数据，保持原有数据
