@@ -10,8 +10,8 @@ const CHARACTERISTIC_UUIDS = {
   RUN_DURATION: '2f7a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c6',    // 运行时长
   STOP_INTERVAL: '3f8a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c7',   // 停止间隔
   // SYSTEM_CONTROL: '4f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c8',  // 系统控制 - 已删除
-  STATUS_QUERY: '5f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c9',    // 状态查询
-  SPEED_CONTROLLER: '6f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5ca' // 调速器状态
+  STATUS_QUERY: '5f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c9'    // 状态查询
+  // SPEED_CONTROLLER: '6f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5ca' // 调速器状态 - 已删除
 }
 // 设备名称
 const DEVICE_NAME = 'ESP32-Motor-Control'
@@ -782,86 +782,6 @@ async function getSystemStatus(deviceId, maxRetries = 3, retryDelay = 1000) {
   throw lastError
 }
 
-/**
- * 获取调速器状态（单次尝试）
- * @param {string} deviceId - 设备ID
- * @returns {Promise<Object>} - 调速器状态对象
- */
-async function getSpeedControllerStatusOnce(deviceId) {
-  console.log('开始获取调速器状态:', deviceId)
-  
-  // 获取目标服务和特征值
-  const { serviceId, characteristicId } = await getTargetServiceAndCharacteristic(
-    deviceId,
-    CHARACTERISTIC_UUIDS.SPEED_CONTROLLER
-  )
-  
-  // 读取调速器状态特征值
-  const buffer = await readCharacteristic(deviceId, serviceId, characteristicId)
-  
-  // 检查buffer是否有效
-  if (!buffer) {
-    throw new Error('读取到的调速器状态buffer为空')
-  }
-  
-  // 将ArrayBuffer转换为字符串
-  const jsonString = bufferToString(buffer)
-  
-  // 检查是否为空数据
-  if (!jsonString || jsonString.trim().length === 0) {
-    throw new Error('接收到空的调速器状态数据')
-  }
-  
-  // 解析JSON数据
-  let speedControllerData
-  try {
-    speedControllerData = JSON.parse(jsonString.trim())
-  } catch (parseError) {
-    console.error('调速器状态JSON解析失败:', parseError)
-    throw new Error(`调速器状态JSON解析失败: ${parseError.message}`)
-  }
-  
-  console.log('获取调速器状态成功:', speedControllerData)
-  return speedControllerData
-}
-
-/**
- * 获取调速器状态（带重试机制）
- * @param {string} deviceId - 设备ID
- * @param {number} maxRetries - 最大重试次数
- * @param {number} retryDelay - 重试延迟(毫秒)
- * @returns {Promise<Object>} - 调速器状态对象
- */
-async function getSpeedControllerStatus(deviceId, maxRetries = 3, retryDelay = 1000) {
-  let lastError = null
-  
-  console.log(`开始带重试的调速器状态获取 (最多${maxRetries}次):`, deviceId)
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`尝试获取调速器状态 (${attempt}/${maxRetries}):`, deviceId)
-      const status = await getSpeedControllerStatusOnce(deviceId)
-      console.log('✅ 调速器状态获取成功:', status)
-      return status
-    } catch (error) {
-      lastError = error
-      console.warn(`获取调速器状态尝试 ${attempt} 失败:`, {
-        attempt,
-        errorMessage: error.message
-      })
-      
-      if (attempt < maxRetries) {
-        const currentDelay = retryDelay * attempt // 递增延迟
-        console.log(`等待 ${currentDelay}ms 后重试...`)
-        await new Promise(resolve => setTimeout(resolve, currentDelay))
-      }
-    }
-  }
-  
-  console.error('❌ 所有获取调速器状态尝试失败:', lastError)
-  throw lastError
-}
-
 // 导出模块
 export default {
   // 常量定义
@@ -891,8 +811,8 @@ export default {
   
   // 状态查询功能
   getSystemStatus,
-  getSpeedControllerStatus,
   // getSystemControlStatus已删除
+  // getSpeedControllerStatus已删除
   
   // 控制功能
   setRunDuration,

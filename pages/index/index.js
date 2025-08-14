@@ -38,26 +38,6 @@ Page({
       // systemControl字段已删除
     },
     
-    // 调速器状态数据
-    speedControllerStatus: {
-      moduleAddress: 0,            // 模块地址 (1-255)
-      isRunning: false,            // 运行状态: true=运行中, false=停止
-      frequency: 0,                // 当前频率 (Hz)
-      dutyCycle: 0,                // 当前占空比 (0-100%)
-      externalSwitch: false,       // 外接开关功能: true=开启, false=关闭
-      analogControl: false,        // 0-10V控制功能: true=开启, false=关闭
-      powerOnState: false,         // 开机默认状态: true=运行, false=停止
-      minOutput: 0,                // 最小输出百分比 (0-50%)
-      maxOutput: 0,                // 最大输出百分比 (60-100%)
-      softStartTime: 0,            // 缓启动时间 (0.1秒单位, 50=5秒)
-      softStopTime: 0,             // 缓停止时间 (0.1秒单位, 30=3秒)
-      communication: {
-        lastUpdateTime: 0,         // 最后更新时间戳 (毫秒)
-        connectionStatus: 'disconnected', // 连接状态: "connected", "disconnected", "error"
-        errorCount: 0,             // 通信错误计数
-        responseTime: 0            // 最后响应时间 (毫秒)
-      }
-    },
     
     // 状态刷新定时器
     statusTimer: null,
@@ -597,27 +577,6 @@ Page({
         systemStatus: formattedStatusData
       })
       
-      // 获取调速器状态
-      try {
-        const speedControllerData = await Ble.getSpeedControllerStatus(this.data.deviceId)
-        
-        // 检查是否有错误信息
-        if (speedControllerData && speedControllerData.error) {
-          // 如果返回了错误信息，视为获取失败
-          console.warn('获取调速器状态失败:', speedControllerData.error)
-          // 调速器状态获取失败时不更新数据，保持原有数据
-          // 不影响系统状态的正常显示
-        } else if (speedControllerData) {
-          // 只有在返回有效数据时才更新调速器状态展示区域
-          this.setData({
-            speedControllerStatus: speedControllerData
-          })
-        }
-      } catch (speedError) {
-        console.warn('获取调速器状态失败:', speedError)
-        // 调速器状态获取失败时不更新数据，保持原有数据
-        // 不影响系统状态的正常显示
-      }
       
     } catch (error) {
       console.error('获取系统状态失败:', error)
