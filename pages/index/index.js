@@ -520,10 +520,10 @@ Page({
     // 立即获取一次状态
     this.refreshSystemStatus()
     
-    // 设置定时器，每3秒刷新一次
+    // 设置定时器，每1秒刷新一次
     const timer = setInterval(() => {
       this.refreshSystemStatus()
-    }, 3000)
+    }, 1000)
     
     this.setData({
       statusTimer: timer
