@@ -142,6 +142,211 @@
     </view>
   </view>
 
+  <!-- 调速器控制区 -->
+  <view class="section speed-control-section" wx:if="{{connectionStatus === 'connected'}}">
+    <view class="section-header">
+      <text class="section-title">🎛️ 调速器控制</text>
+    </view>
+    
+    <view class="control-card">
+      <!-- 频率控制 -->
+      <view class="control-line">
+        <text class="control-label-line">频率：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onFrequencyDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{frequency}}"
+          bindinput="onFrequencyInput"
+          bindblur="onFrequencyBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onFrequencyIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">KHz</text>
+      </view>
+      
+      <!-- 占空比控制 -->
+      <view class="control-line">
+        <text class="control-label-line">占空比：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onDutyCycleDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{dutyCycle}}"
+          bindinput="onDutyCycleInput"
+          bindblur="onDutyCycleBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onDutyCycleIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">%</text>
+      </view>
+      
+      <!-- 最小输出控制 -->
+      <view class="control-line">
+        <text class="control-label-line">最小输出：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onMinOutputDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{minOutput}}"
+          bindinput="onMinOutputInput"
+          bindblur="onMinOutputBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onMinOutputIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">%</text>
+      </view>
+      
+      <!-- 最大输出控制 -->
+      <view class="control-line">
+        <text class="control-label-line">最大输出：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onMaxOutputDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{maxOutput}}"
+          bindinput="onMaxOutputInput"
+          bindblur="onMaxOutputBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onMaxOutputIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">%</text>
+      </view>
+      
+      <!-- 缓启动时间控制 -->
+      <view class="control-line">
+        <text class="control-label-line">缓启动时间：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onSoftStartTimeDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{softStartTime}}"
+          bindinput="onSoftStartTimeInput"
+          bindblur="onSoftStartTimeBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onSoftStartTimeIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">秒</text>
+      </view>
+      
+      <!-- 缓停止时间控制 -->
+      <view class="control-line">
+        <text class="control-label-line">缓停止时间：</text>
+        <button
+          class="control-btn-inline decrease-btn"
+          bindtap="onSoftStopTimeDecrease"
+        >
+          -
+        </button>
+        <input
+          class="control-input-inline"
+          type="number"
+          value="{{softStopTime}}"
+          bindinput="onSoftStopTimeInput"
+          bindblur="onSoftStopTimeBlur"
+        />
+        <button
+          class="control-btn-inline increase-btn"
+          bindtap="onSoftStopTimeIncrease"
+        >
+          +
+        </button>
+        <text class="control-unit">秒</text>
+      </view>
+      
+      <!-- 分割线 -->
+      <view style="border-bottom: 1px solid #eee; margin: 10px 0;"></view>
+      
+      <!-- 开关控制 -->
+      <view class="control-line switch-line">
+        <!-- 外接开关 -->
+        <view class="switch-item" style="display: flex;flex-direction: column;justify-content: center;flex: 1;">
+          <text class="switch-label" style="padding-bottom:10px;">外接开关：</text>
+          <switch
+            class="control-switch"
+            checked="{{externalSwitch}}"
+            bindchange="onExternalSwitchChange"
+          />
+        </view>
+        
+        <!-- 0-10V 控制开关 -->
+        <view class="switch-item" style="display: flex;flex-direction: column;justify-content: center;flex: 1;text-align: center;">
+          <text class="switch-label" style="padding-bottom:10px;">0-10V控制：</text>
+          <switch
+            class="control-switch"
+            checked="{{analogControl}}"
+            bindchange="onAnalogControlChange"
+          />
+        </view>
+        
+        <!-- 开机默认开关 -->
+        <view class="switch-item" style="display: flex;flex-direction: column;justify-content: center;flex: 1;text-align: right;">
+          <text class="switch-label" style="padding-bottom:10px;">开机默认：</text>
+          <switch
+            class="control-switch"
+            checked="{{powerOnState}}"
+            bindchange="onPowerOnStateChange"
+          />
+        </view>
+      </view>
+      
+      <!-- 应用设置按钮 -->
+      <view class="control-buttons">
+        <button
+          class="control-btn apply-btn"
+          bindtap="onApplySpeedSettings"
+        >
+          应用设置
+        </button>
+      </view>
+    </view>
+  </view>
+
   <!-- 系统状态展示区 -->
   <view class="section status-section" wx:if="{{connectionStatus === 'connected'}}">
     <view class="section-header">

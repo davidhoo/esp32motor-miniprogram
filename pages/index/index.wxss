@@ -259,6 +259,10 @@ button[disabled] {
   margin-top: 20rpx;
 }
 
+.speed-control-section {
+  margin-top: 20rpx;
+}
+
 .control-card {
   background: white;
   border-radius: 16rpx;
@@ -582,6 +586,12 @@ button[disabled] {
     font-size: 30rpx;
   }
 }
+
+@media (min-width: 768rpx) {
+  .speed-control-section {
+    margin-top: 30rpx;
+  }
+}
 @media (max-width: 480rpx) {
   .control-card,
   .status-card {
@@ -643,6 +653,12 @@ button[disabled] {
   
   .status-value.motor-state {
     font-size: 22rpx;
+  }
+}
+
+@media (max-width: 480rpx) {
+  .speed-control-section {
+    margin-top: 15rpx;
   }
 }
 
@@ -740,6 +756,12 @@ button[disabled] {
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  .speed-control-section .section-title {
+    color: #fff;
+  }
+}
+
 /* 状态区域动画效果 */
 .control-section,
 .status-section {
@@ -794,7 +816,7 @@ button[disabled] {
   align-items: center;
   gap: 8rpx;
   margin-bottom: 16rpx;
-  height: 48rpx;
+  min-height: 48rpx;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -809,6 +831,7 @@ button[disabled] {
   font-weight: 500;
   white-space: nowrap;
   flex: 0 0 auto;
+  width: 180rpx; /* 固定宽度实现对齐 */
 }
 
 .control-label-line .control-btn-inline {
@@ -864,7 +887,9 @@ button[disabled] {
 }
 
 .control-input-inline {
-  width: 80rpx;
+  width: 100rpx;
+  margin-left: 15rpx;
+  margin-right: 15rpx;
   height: 42rpx;
   border: 1rpx solid #e0e0e0;
   border-radius: 6rpx;
@@ -882,6 +907,9 @@ button[disabled] {
   font-weight: 500;
   white-space: nowrap;
   flex: 0 0 auto;
+  text-align: right;
+  width: 30rpx;
+  margin-left: 20rpx;
 }
 
 /* 小屏幕适配 */
@@ -910,6 +938,10 @@ button[disabled] {
   .control-unit {
     font-size: 20rpx;
   }
+  
+  .control-label-line {
+    width: 160rpx; /* 小屏幕下稍窄一些 */
+  }
 }
 
 @media (min-width: 768rpx) {
@@ -920,6 +952,74 @@ button[disabled] {
   
   .control-label-line {
     font-size: 28rpx;
+  }
+  .switch-label {
+    font-size: 28rpx;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    width: 180rpx; /* 固定宽度实现对齐 */
+  }
+  
+  /* 开关样式 */
+  .control-switch {
+    transform: scale(0.8);
+    margin-left: 10rpx;
+  }
+  
+  @media (min-width: 768rpx) {
+    .control-switch {
+      transform: scale(0.9);
+    }
+  }
+  
+  @media (max-width: 480rpx) {
+    .control-switch {
+      transform: scale(0.7);
+    }
+  }
+  
+  /* 开关行样式 */
+  .switch-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20rpx;
+    margin-bottom: 20rpx;
+  }
+    
+  /* 开关项样式 */
+  .switch-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* 开关标签样式 */
+  .switch-label {
+    font-size: 24rpx;
+    color: #666;
+    margin-bottom: 10rpx;
+    text-align: center;
+  }
+  
+  @media (min-width: 768rpx) {
+    .switch-label {
+      font-size: 26rpx;
+    }
+  }
+  
+  @media (max-width: 480rpx) {
+    .switch-label {
+      font-size: 22rpx;
+    }
+    
+    .switch-line {
+      gap: 10rpx;
+    }
   }
   
   .control-btn-inline {
@@ -936,6 +1036,10 @@ button[disabled] {
   
   .control-unit {
     font-size: 26rpx;
+  }
+  
+  .control-label-line {
+    width: 200rpx; /* 大屏幕下稍宽一些 */
   }
 }
 

@@ -19,6 +19,18 @@ Page({
     stopDuration: 60,    // 停止间隔(秒)
     isApplying: false,   // 是否正在应用设置
     
+    // 调速器控制参数
+    frequency: 1000,        // 频率 (Hz)
+    dutyCycle: 50,          // 占空比 (0-100%)
+    minOutput: 10,          // 最小输出百分比 (0-50%)
+    maxOutput: 100,         // 最大输出百分比 (60-100%)
+    softStartTime: 50,      // 缓启动时间 (0.1秒单位, 50=5秒)
+    softStopTime: 30,       // 缓停止时间 (0.1秒单位, 30=3秒)
+    externalSwitch: false,  // 外接开关功能: true=开启, false=关闭
+    analogControl: false,   // 0-10V控制功能: true=开启, false=关闭
+    powerOnState: false,    // 开机默认状态: true=运行, false=停止
+    isSpeedApplying: false, // 是否正在应用调速器设置
+    
     // 系统状态数据
     systemStatus: {
       state: 0,                    // 状态码 (0=停止, 1=运行中, 2=暂停, 3=启动中)
@@ -280,9 +292,10 @@ Page({
       // 连接成功后开始状态刷新
       this.startStatusRefresh()
       
-      // 首次连接成功后同步电机控制参数
+      // 首次连接成功后同步电机控制参数和调速器参数
       setTimeout(() => {
         this.syncMotorControlParams()
+        this.syncSpeedControllerParams()
       }, 500)
       
     } catch (error) {
@@ -512,15 +525,15 @@ Page({
   // 同步设备参数功能已删除
 
   // 开始状态刷新
-  // 开始状态刷新
   startStatusRefresh() {
     // 清除之前的定时器
     this.stopStatusRefresh()
     
     // 立即获取一次状态
     this.refreshSystemStatus()
+    this.syncSpeedControllerParams() // 立即同步调速器参数
     
-    // 设置定时器，每1秒刷新一次
+    // 设置定时器，每1秒刷新一次（只刷新系统状态，不刷新调速器参数）
     const timer = setInterval(() => {
       this.refreshSystemStatus()
     }, 1000)
@@ -529,6 +542,7 @@ Page({
       statusTimer: timer
     })
   },
+
   // 同步电机控制参数
   syncMotorControlParams() {
     const { systemStatus } = this.data
@@ -661,6 +675,426 @@ Page({
       text: stateName || '未知',
       color: '#747d8c',
       icon: '⚪'
+    }
+  },
+
+  /* ========== 调速器控制功能 ========== */
+
+  // 验证频率值
+  validateFrequency(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 1 || num > 10000) { // 假设频率范围为1-10000Hz
+      return { valid: false, message: '频率应在1-10000Hz之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证占空比值
+  validateDutyCycle(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 0 || num > 100) {
+      return { valid: false, message: '占空比应在0-100%之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证最小输出值
+  validateMinOutput(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 0 || num > 50) {
+      return { valid: false, message: '最小输出应在0-50%之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证最大输出值
+  validateMaxOutput(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 60 || num > 100) {
+      return { valid: false, message: '最大输出应在60-100%之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证缓启动时间值
+  validateSoftStartTime(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 0 || num > 1000) { // 假设最大1000个0.1秒单位，即100秒
+      return { valid: false, message: '缓启动时间应在0-1000单位之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 验证缓停止时间值
+  validateSoftStopTime(value) {
+    const num = parseInt(value)
+    if (isNaN(num)) {
+      return { valid: false, message: '请输入有效的数字' }
+    }
+    if (num < 0 || num > 1000) { // 假设最大1000个0.1秒单位，即100秒
+      return { valid: false, message: '缓停止时间应在0-1000单位之间' }
+    }
+    return { valid: true, value: num }
+  },
+
+  // 频率增加按钮
+  onFrequencyIncrease() {
+    const newValue = this.data.frequency + 1 // 增加1kHz步长
+    const validation = this.validateFrequency(newValue)
+    if (validation.valid) {
+      this.setData({ frequency: validation.value })
+    }
+  },
+
+  // 频率减少按钮
+  onFrequencyDecrease() {
+    const newValue = this.data.frequency - 1 // 减少1kHz步长
+    const validation = this.validateFrequency(newValue)
+    if (validation.valid) {
+      this.setData({ frequency: validation.value })
+    }
+  },
+
+  // 频率输入框变化
+  onFrequencyInput(e) {
+    const validation = this.validateFrequency(e.detail.value)
+    if (validation.valid) {
+      this.setData({ frequency: validation.value })
+    }
+  },
+
+  // 频率输入框失焦验证
+  onFrequencyBlur(e) {
+    const validation = this.validateFrequency(e.detail.value)
+    if (validation.valid) {
+      this.setData({ frequency: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 占空比增加按钮
+  onDutyCycleIncrease() {
+    const newValue = this.data.dutyCycle + 1 // 增加1%步长
+    const validation = this.validateDutyCycle(newValue)
+    if (validation.valid) {
+      this.setData({ dutyCycle: validation.value })
+    }
+  },
+
+  // 占空比减少按钮
+  onDutyCycleDecrease() {
+    const newValue = this.data.dutyCycle - 1 // 减少1%步长
+    const validation = this.validateDutyCycle(newValue)
+    if (validation.valid) {
+      this.setData({ dutyCycle: validation.value })
+    }
+  },
+
+  // 占空比输入框变化
+  onDutyCycleInput(e) {
+    const validation = this.validateDutyCycle(e.detail.value)
+    if (validation.valid) {
+      this.setData({ dutyCycle: validation.value })
+    }
+  },
+
+  // 占空比输入框失焦验证
+  onDutyCycleBlur(e) {
+    const validation = this.validateDutyCycle(e.detail.value)
+    if (validation.valid) {
+      this.setData({ dutyCycle: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 最小输出增加按钮
+  onMinOutputIncrease() {
+    const newValue = this.data.minOutput + 1
+    const validation = this.validateMinOutput(newValue)
+    if (validation.valid) {
+      this.setData({ minOutput: validation.value })
+    }
+  },
+
+  // 最小输出减少按钮
+  onMinOutputDecrease() {
+    const newValue = this.data.minOutput - 1
+    const validation = this.validateMinOutput(newValue)
+    if (validation.valid) {
+      this.setData({ minOutput: validation.value })
+    }
+  },
+
+  // 最小输出输入框变化
+  onMinOutputInput(e) {
+    const validation = this.validateMinOutput(e.detail.value)
+    if (validation.valid) {
+      this.setData({ minOutput: validation.value })
+    }
+  },
+
+  // 最小输出输入框失焦验证
+  onMinOutputBlur(e) {
+    const validation = this.validateMinOutput(e.detail.value)
+    if (validation.valid) {
+      this.setData({ minOutput: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 最大输出增加按钮
+  onMaxOutputIncrease() {
+    const newValue = this.data.maxOutput + 1
+    const validation = this.validateMaxOutput(newValue)
+    if (validation.valid) {
+      this.setData({ maxOutput: validation.value })
+    }
+  },
+
+  // 最大输出减少按钮
+  onMaxOutputDecrease() {
+    const newValue = this.data.maxOutput - 1
+    const validation = this.validateMaxOutput(newValue)
+    if (validation.valid) {
+      this.setData({ maxOutput: validation.value })
+    }
+  },
+
+  // 最大输出输入框变化
+  onMaxOutputInput(e) {
+    const validation = this.validateMaxOutput(e.detail.value)
+    if (validation.valid) {
+      this.setData({ maxOutput: validation.value })
+    }
+  },
+
+  // 最大输出输入框失焦验证
+  onMaxOutputBlur(e) {
+    const validation = this.validateMaxOutput(e.detail.value)
+    if (validation.valid) {
+      this.setData({ maxOutput: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 缓启动时间增加按钮
+  onSoftStartTimeIncrease() {
+    const newValue = this.data.softStartTime + 1 // 增加1个单位(1秒)
+    const validation = this.validateSoftStartTime(newValue)
+    if (validation.valid) {
+      this.setData({ softStartTime: validation.value })
+    }
+  },
+
+  // 缓启动时间减少按钮
+  onSoftStartTimeDecrease() {
+    const newValue = this.data.softStartTime - 1 // 减少1个单位(1秒)
+    const validation = this.validateSoftStartTime(newValue)
+    if (validation.valid) {
+      this.setData({ softStartTime: validation.value })
+    }
+  },
+
+  // 缓启动时间输入框变化
+  onSoftStartTimeInput(e) {
+    const validation = this.validateSoftStartTime(e.detail.value)
+    if (validation.valid) {
+      this.setData({ softStartTime: validation.value })
+    }
+  },
+
+  // 缓启动时间输入框失焦验证
+  onSoftStartTimeBlur(e) {
+    const validation = this.validateSoftStartTime(e.detail.value)
+    if (validation.valid) {
+      this.setData({ softStartTime: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 缓停止时间增加按钮
+  onSoftStopTimeIncrease() {
+    const newValue = this.data.softStopTime + 1 // 增加1个单位(1秒)
+    const validation = this.validateSoftStopTime(newValue)
+    if (validation.valid) {
+      this.setData({ softStopTime: validation.value })
+    }
+  },
+
+  // 缓停止时间减少按钮
+  onSoftStopTimeDecrease() {
+    const newValue = this.data.softStopTime - 1 // 减少1个单位(1秒)
+    const validation = this.validateSoftStopTime(newValue)
+    if (validation.valid) {
+      this.setData({ softStopTime: validation.value })
+    }
+  },
+
+  // 缓停止时间输入框变化
+  onSoftStopTimeInput(e) {
+    const validation = this.validateSoftStopTime(e.detail.value)
+    if (validation.valid) {
+      this.setData({ softStopTime: validation.value })
+    }
+  },
+
+  // 缓停止时间输入框失焦验证
+  onSoftStopTimeBlur(e) {
+    const validation = this.validateSoftStopTime(e.detail.value)
+    if (validation.valid) {
+      this.setData({ softStopTime: validation.value })
+    } else {
+      wx.showToast({
+        title: validation.message,
+        icon: 'none'
+      })
+    }
+  },
+
+  // 外接开关变化
+  onExternalSwitchChange(e) {
+    this.setData({ externalSwitch: e.detail.value })
+  },
+
+  // 0-10V控制开关变化
+  onAnalogControlChange(e) {
+    this.setData({ analogControl: e.detail.value })
+  },
+
+  // 开机默认状态开关变化
+  onPowerOnStateChange(e) {
+    this.setData({ powerOnState: e.detail.value })
+  },
+
+  // 应用调速器设置到BLE设备
+  async onApplySpeedSettings() {
+    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
+      this.showErrorToast('请先连接设备')
+      return
+    }
+
+    this.setData({ isSpeedApplying: true })
+
+    try {
+      // 调用BLE函数来设置调速器参数
+      await Ble.setSpeedControllerParams(this.data.deviceId, {
+        frequency: this.data.frequency,
+        dutyCycle: this.data.dutyCycle,
+        minOutput: this.data.minOutput,
+        maxOutput: this.data.maxOutput,
+        softStartTime: this.data.softStartTime,
+        softStopTime: this.data.softStopTime,
+        externalSwitch: this.data.externalSwitch,
+        analogControl: this.data.analogControl,
+        powerOnState: this.data.powerOnState
+      })
+
+      this.showSuccessToast('调速器设置已应用')
+    } catch (error) {
+      console.error('应用调速器设置失败:', error)
+      let errorMessage = '设置失败，请重试'
+
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      this.showErrorToast(errorMessage)
+    } finally {
+      this.setData({ isSpeedApplying: false })
+    }
+  },
+
+  // 从BLE设备同步调速器参数
+  async syncSpeedControllerParams() {
+    if (this.data.connectionStatus !== 'connected' || !this.data.deviceId) {
+      return
+    }
+
+    try {
+      // 获取调速器状态
+      const speedControllerStatus = await Ble.getSpeedControllerStatus(this.data.deviceId)
+      
+      // 更新UI控件
+      this.setData({
+        frequency: speedControllerStatus.frequency,
+        dutyCycle: speedControllerStatus.dutyCycle,
+        minOutput: speedControllerStatus.minOutput,
+        maxOutput: speedControllerStatus.maxOutput,
+        softStartTime: speedControllerStatus.softStartTime,
+        softStopTime: speedControllerStatus.softStopTime,
+        externalSwitch: speedControllerStatus.externalSwitch,
+        analogControl: speedControllerStatus.analogControl,
+        powerOnState: speedControllerStatus.powerOnState
+      })
+      
+      console.log('已同步调速器参数:', speedControllerStatus)
+    } catch (error) {
+      console.error('同步调速器参数失败:', error)
+      
+      // 根据错误类型处理
+      let errorMessage = '获取调速器参数失败'
+      
+      if (error.errCode === 10004) {
+        errorMessage = '设备通信失败'
+      } else if (error.errCode === 10006) {
+        errorMessage = '设备连接已断开'
+      } else if (error.errCode === 10012) {
+        errorMessage = '设备未响应'
+      }
+      
+      // 如果获取状态失败，可能是连接断开了
+      if (error.errCode === 10004 || error.errCode === 10006 || error.errCode === 10012) {
+        this.setData({
+          connectionStatus: 'disconnected',
+          deviceId: '',
+          deviceName: '',
+          buttonText: '扫描设备',
+          errorMessage: errorMessage
+        })
+        this.stopStatusRefresh()
+        
+        // 显示错误提示
+        this.showErrorToast(errorMessage)
+      }
     }
   }
 })

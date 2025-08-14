@@ -151,7 +151,7 @@
 | 停止间隔 | `3f8a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c7` | 字符串 | R/W/N | stopInterval |
 | ~~系统控制~~ | ~~`4f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c8`~~ | ~~字符串~~ | ~~R/W/N~~ | ~~systemControl~~ |
 | 状态查询 | `5f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5c9` | JSON | R/N | systemStatus |
-| 调速器状态 | `6f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5ca` | JSON | R/N | speedControllerStatus |
+| 调速器状态 | `6f9a9c2e-6b1a-4b5e-8b2a-c1c2c3c4c5ca` | JSON | R/W | speedControllerStatus |
 #### 3.1.3 数据格式转换
 
 **基本数据类型**：
